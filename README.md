@@ -1,14 +1,20 @@
 -- SERVIÇOS
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 
 -- CONFIGURAÇÕES
-local Settings = { ESP = false, Noclip = false, TargetPlayer = nil }
+local Settings = { 
+    ESP = false, 
+    Noclip = false, 
+    Speed = 16, 
+    Fly = false 
+}
 
--- --- CRIAÇÃO DA INTERFACE (MANTIDA) ---
+-- --- INTERFACE (DESIGN MANTIDO) ---
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "LuxHub_Final"
+ScreenGui.Name = "LuxHub_V1.1_Fix"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
@@ -24,34 +30,18 @@ LeftFrame.Size = UDim2.new(0, 140, 0, 300)
 LeftFrame.Position = UDim2.new(0, 10, 0, 10)
 LeftFrame.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 LeftFrame.Parent = Background
-local UICornerL = Instance.new("UICorner"); UICornerL.CornerRadius = UDim.new(0, 20); UICornerL.Parent = LeftFrame
+Instance.new("UICorner", LeftFrame).CornerRadius = UDim.new(0, 20)
 
 local Title = Instance.new("TextLabel")
-Title.Text = "Lux hub"
-Title.Font = Enum.Font.GothamBold
-Title.TextSize = 26
-Title.TextColor3 = Color3.fromRGB(200, 200, 200)
-Title.Position = UDim2.new(0, 15, 0, 20)
-Title.Size = UDim2.new(0, 110, 0, 40)
-Title.BackgroundTransparency = 1
-Title.Parent = LeftFrame
-
-local ManBtn = Instance.new("TextButton")
-ManBtn.Text = "Man"
-ManBtn.Font = Enum.Font.GothamBold
-ManBtn.TextColor3 = Color3.new(0.8,0.8,0.8)
-ManBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-ManBtn.Size = UDim2.new(0, 110, 0, 35)
-ManBtn.Position = UDim2.new(0, 15, 0, 80)
-ManBtn.Parent = LeftFrame
-local UICornerM = Instance.new("UICorner"); UICornerM.CornerRadius = UDim.new(0, 10); UICornerM.Parent = ManBtn
+Title.Text = "Lux hub"; Title.Font = "GothamBold"; Title.TextSize = 26; Title.TextColor3 = Color3.fromRGB(200, 200, 200)
+Title.Position = UDim2.new(0, 15, 0, 20); Title.Size = UDim2.new(0, 110, 0, 40); Title.BackgroundTransparency = 1; Title.Parent = LeftFrame
 
 local RightFrame = Instance.new("Frame")
 RightFrame.Size = UDim2.new(0, 350, 0, 300)
 RightFrame.Position = UDim2.new(0, 160, 0, 10)
 RightFrame.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 RightFrame.Parent = Background
-local UICornerR = Instance.new("UICorner"); UICornerR.CornerRadius = UDim.new(0, 20); UICornerR.Parent = RightFrame
+Instance.new("UICorner", RightFrame).CornerRadius = UDim.new(0, 20)
 
 local Ver = Instance.new("TextLabel")
 Ver.Text = "v 1.1"; Ver.TextColor3 = Color3.new(1,1,1); Ver.Position = UDim2.new(1, -75, 0, 10); Ver.BackgroundTransparency = 1; Ver.Parent = RightFrame
@@ -60,10 +50,10 @@ local Close = Instance.new("TextButton")
 Close.Text = "X"; Close.TextColor3 = Color3.new(1,1,1); Close.Position = UDim2.new(1, -35, 0, 10); Close.BackgroundTransparency = 1; Close.Parent = RightFrame
 Close.MouseButton1Click:Connect(function() Background.Visible = false end)
 
--- --- FUNÇÃO AUXILIAR TOGGLE ---
+-- --- FUNÇÃO TOGGLE (ESTILO VISUAL) ---
 local function AddToggle(name, pos, callback)
 	local TFrame = Instance.new("Frame")
-	TFrame.Size = UDim2.new(0.9, 0, 0, 35); TFrame.Position = pos; TFrame.BackgroundColor3 = Color3.fromRGB(40,40,40); TFrame.Parent = RightFrame
+	TFrame.Size = UDim2.new(0, 300, 0, 35); TFrame.Position = pos; TFrame.BackgroundColor3 = Color3.fromRGB(40,40,40); TFrame.Parent = RightFrame
 	Instance.new("UICorner", TFrame).CornerRadius = UDim.new(0, 10)
 	
 	local Lbl = Instance.new("TextLabel")
@@ -85,96 +75,82 @@ local function AddToggle(name, pos, callback)
 	end)
 end
 
--- --- LÓGICA ESP (HIGHLIGHTS) ---
-local function UpdateESP()
-	for _, plr in pairs(Players:GetPlayers()) do
-		if plr ~= LocalPlayer and plr.Character then
-			local hl = plr.Character:FindFirstChild("LuxESP")
-			if Settings.ESP then
-				if not hl then
-					hl = Instance.new("Highlight")
-					hl.Name = "LuxESP"
-					hl.FillColor = Color3.fromRGB(255, 0, 0)
-					hl.FillTransparency = 0.5
-					hl.OutlineColor = Color3.fromRGB(255, 255, 255)
-					hl.Parent = plr.Character
-				end
-			else
-				if hl then hl:Destroy() end
-			end
-		end
-	end
-end
+-- --- LÓGICA TÉCNICA (CORE) ---
 
-RunService.RenderStepped:Connect(UpdateESP)
-
--- --- LÓGICA NOCLIP ---
-RunService.Stepped:Connect(function()
-	if Settings.Noclip and LocalPlayer.Character then
-		for _, v in pairs(LocalPlayer.Character:GetDescendants()) do
-			if v:IsA("BasePart") then v.CanCollide = false end
-		end
-	end
+-- 1. ESP Corrigido
+RunService.RenderStepped:Connect(function()
+    for _, plr in pairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer and plr.Character then
+            local highlight = plr.Character:FindFirstChild("LuxESP")
+            if Settings.ESP then
+                if not highlight then
+                    highlight = Instance.new("Highlight")
+                    highlight.Name = "LuxESP"
+                    highlight.FillColor = Color3.fromRGB(255, 0, 0)
+                    highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+                    highlight.Parent = plr.Character
+                end
+            elseif highlight then
+                highlight:Destroy()
+            end
+        end
+    end
 end)
 
--- --- ADICIONAR BOTÕES ---
+-- 2. Noclip Estrito
+RunService.Stepped:Connect(function()
+    if Settings.Noclip and LocalPlayer.Character then
+        for _, v in pairs(LocalPlayer.Character:GetDescendants()) do
+            if v:IsA("BasePart") then v.CanCollide = false end
+        end
+    end
+end)
+
+-- 3. Fly (Voo)
+local bodyVel, bodyGyro
+RunService.RenderStepped:Connect(function()
+    if Settings.Fly and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        local root = LocalPlayer.Character.HumanoidRootPart
+        if not bodyVel then
+            bodyVel = Instance.new("BodyVelocity", root)
+            bodyVel.MaxForce = Vector3.new(1e6, 1e6, 1e6)
+            bodyGyro = Instance.new("BodyGyro", root)
+            bodyGyro.MaxTorque = Vector3.new(1e6, 1e6, 1e6)
+            bodyGyro.CFrame = root.CFrame
+        end
+        bodyVel.Velocity = workspace.CurrentCamera.CFrame.LookVector * (LocalPlayer.Character.Humanoid.MoveDirection.Magnitude > 0 and 50 or 0)
+        bodyGyro.CFrame = workspace.CurrentCamera.CFrame
+    else
+        if bodyVel then bodyVel:Destroy() bodyVel = nil end
+        if bodyGyro then bodyGyro:Destroy() bodyGyro = nil end
+    end
+end)
+
+-- --- APLICAÇÃO NA INTERFACE ---
 AddToggle("Esp", UDim2.new(0.05, 0, 0, 40), function(v) Settings.ESP = v end)
 AddToggle("Noclip", UDim2.new(0.05, 0, 0, 85), function(v) Settings.Noclip = v end)
+AddToggle("Fly", UDim2.new(0.05, 0, 0, 130), function(v) Settings.Fly = v end)
 
--- DROPDOWN TP (LISTA DE PLAYERS)
-local TpFrame = Instance.new("Frame")
-TpFrame.Size = UDim2.new(0.9, 0, 0, 35); TpFrame.Position = UDim2.new(0.05, 0, 0, 130); TpFrame.BackgroundColor3 = Color3.fromRGB(40,40,40); TpFrame.Parent = RightFrame
-Instance.new("UICorner", TpFrame).CornerRadius = UDim.new(0, 10)
+-- Speed (Usando o botão "Pronto" para aplicar)
+local SpeedInput = Instance.new("TextBox")
+SpeedInput.Size = UDim2.new(0.9, 0, 0, 35); SpeedInput.Position = UDim2.new(0.05, 0, 0, 175); SpeedInput.BackgroundColor3 = Color3.fromRGB(40,40,40)
+SpeedInput.TextColor3 = Color3.new(1,1,1); SpeedInput.Text = "Velocidade (16)"; SpeedInput.Parent = RightFrame
+Instance.new("UICorner", SpeedInput)
 
-local TpLbl = Instance.new("TextLabel")
-TpLbl.Text = "Tp Player"; TpLbl.TextColor3 = Color3.new(1,1,1); TpLbl.Position = UDim2.new(0, 15, 0, 0); TpLbl.Size = UDim2.new(0.6, 0, 1, 0); TpLbl.BackgroundTransparency = 1; TpLbl.Parent = TpFrame; TpLbl.TextXAlignment = "Left"
+local ApplyBtn = Instance.new("TextButton")
+ApplyBtn.Text = "Pronto"; ApplyBtn.Size = UDim2.new(0.4, 0, 0, 35); ApplyBtn.Position = UDim2.new(0.05, 0, 0, 220)
+ApplyBtn.BackgroundColor3 = Color3.fromRGB(40,40,40); ApplyBtn.TextColor3 = Color3.new(1,1,1); ApplyBtn.Parent = RightFrame
+Instance.new("UICorner", ApplyBtn).CornerRadius = UDim.new(0, 15)
 
-local Arrow = Instance.new("TextLabel")
-Arrow.Text = "v"; Arrow.TextColor3 = Color3.new(1,1,1); Arrow.Position = UDim2.new(1, -30, 0, 0); Arrow.Size = UDim2.new(0, 20, 1, 0); Arrow.BackgroundTransparency = 1; Arrow.Parent = TpFrame
-
-local List = Instance.new("ScrollingFrame")
-List.Size = UDim2.new(0.5, 0, 0, 120); List.Position = UDim2.new(0.45, 0, 0, 165); List.BackgroundColor3 = Color3.fromRGB(30,30,30); List.Visible = false; List.Parent = RightFrame; List.ZIndex = 10; List.CanvasSize = UDim2.new(0,0,0,0); List.AutomaticCanvasSize = "Y"
-Instance.new("UIListLayout", List)
-
-local DropBtn = Instance.new("TextButton")
-DropBtn.Size = UDim2.new(1,0,1,0); DropBtn.BackgroundTransparency = 1; DropBtn.Text = ""; DropBtn.Parent = TpFrame
-
-DropBtn.MouseButton1Click:Connect(function()
-	List.Visible = not List.Visible
-	if List.Visible then
-		for _, c in pairs(List:GetChildren()) do if c:IsA("TextButton") then c:Destroy() end end
-		for _, p in pairs(Players:GetPlayers()) do
-			if p ~= LocalPlayer then
-				local b = Instance.new("TextButton")
-				b.Size = UDim2.new(1, 0, 0, 30); b.Text = p.Name; b.BackgroundColor3 = Color3.fromRGB(50,50,50); b.TextColor3 = Color3.new(1,1,1); b.Parent = List
-				b.MouseButton1Click:Connect(function()
-					Settings.TargetPlayer = p
-					TpLbl.Text = p.Name
-					List.Visible = false
-				end)
-			end
-		end
-	end
+ApplyBtn.MouseButton1Click:Connect(function()
+    local val = tonumber(SpeedInput.Text) or 16
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        LocalPlayer.Character.Humanoid.WalkSpeed = val
+    end
 end)
 
--- BOTÃO PRONTO (TELEPORT EXECUTE)
-local Pronto = Instance.new("TextButton")
-Pronto.Text = "Pronto"; Pronto.Font = "GothamBold"; Pronto.TextColor3 = Color3.new(1,1,1); Pronto.BackgroundColor3 = Color3.fromRGB(40,40,40); Pronto.Position = UDim2.new(0.05, 0, 0, 175); Pronto.Size = UDim2.new(0.4, 0, 0, 35); Pronto.Parent = RightFrame
-Instance.new("UICorner", Pronto).CornerRadius = UDim.new(0, 15)
-
-Pronto.MouseButton1Click:Connect(function()
-	if Settings.TargetPlayer and Settings.TargetPlayer.Character then
-		local myRoot = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-		local targetRoot = Settings.TargetPlayer.Character:FindFirstChild("HumanoidRootPart")
-		if myRoot and targetRoot then
-			myRoot.CFrame = targetRoot.CFrame * CFrame.new(0, 0, 3) -- Teleporta 3 studs atrás do player
-		end
-	end
-end)
-
--- ABRIR HUB (BOTÃO EXTERNO)
+-- Botão Abrir
 local Open = Instance.new("TextButton")
-Open.Text = "Lux hub"; Open.Size = UDim2.new(0, 100, 0, 35); Open.Position = UDim2.new(0, 10, 0.4, 0); Open.BackgroundColor3 = Color3.fromRGB(40,40,40); Open.TextColor3 = Color3.new(1,1,1); Open.Parent = ScreenGui
-Instance.new("UICorner", Open)
-
-Open.MouseButton1Click:Connect(function() Background.Visible = not Background.Visible end)
+Open.Text = "Lux hub"; Open.Size = UDim2.new(0, 100, 0, 30); Open.Position = UDim2.new(0, 10, 0.4, 0); Open.Parent = ScreenGui
+Open.MouseButton1Click:Connect(function() Background.Visible = not Backg
+round.Visible end)
