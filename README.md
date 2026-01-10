@@ -14,7 +14,7 @@ local Settings = {
 
 -- --- INTERFACE PRINCIPAL ---
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "LuxHub_V13_Glow"
+ScreenGui.Name = "LuxHub_V13_DragBar"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
@@ -27,17 +27,30 @@ Background.Visible = false
 Background.ClipsDescendants = true
 Instance.new("UICorner", Background).CornerRadius = UDim.new(0, 25)
 
--- FUNÇÃO DRAG
-local function MakeDraggable(gui)
+-- --- BARRA DE ARRASTE (DRAG BAR) ---
+local DragBar = Instance.new("Frame")
+DragBar.Name = "DragBar"
+DragBar.Size = UDim2.new(0, 100, 0, 10) -- Barra pequena no topo
+DragBar.Position = UDim2.new(0.5, -50, 0, 5)
+DragBar.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+DragBar.BackgroundTransparency = 0.5
+DragBar.Parent = Background
+Instance.new("UICorner", DragBar).CornerRadius = UDim.new(1, 0)
+
+-- FUNÇÃO DRAG (APENAS PELA BARRA)
+local function MakeDraggable(gui, dragPart)
     local dragging, dragInput, dragStart, startPos
-    gui.InputBegan:Connect(function(input)
+    dragPart.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
             dragStart = input.Position
             startPos = gui.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then dragging = false end
+            end)
         end
     end)
-    gui.InputChanged:Connect(function(input)
+    dragPart.InputChanged:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseMovement then dragInput = input end
     end)
     UserInputService.InputChanged:Connect(function(input)
@@ -47,41 +60,32 @@ local function MakeDraggable(gui)
         end
     end)
 end
-MakeDraggable(Background)
+MakeDraggable(Background, DragBar) -- Agora só arrasta pela DragBar
 
--- --- BOTÃO DE ABRIR COM BRILHO (GLOW) ---
-local OpenContainer = Instance.new("Frame") -- Container para o botão e o brilho
+-- --- BOTÃO DE ABRIR COM BRILHO ---
+local OpenContainer = Instance.new("Frame")
 OpenContainer.Size = UDim2.new(0, 60, 0, 60)
 OpenContainer.Position = UDim2.new(0, 20, 0.5, -30)
 OpenContainer.BackgroundTransparency = 1
 OpenContainer.Visible = false
 OpenContainer.Parent = ScreenGui
 
--- O Brilho (Glow)
 local Glow = Instance.new("ImageLabel")
-Glow.Name = "GlowEffect"
 Glow.BackgroundTransparency = 1
-Glow.Image = "rbxassetid://50288246" -- Asset de sombra circular para efeito de brilho
-Glow.ImageColor3 = Color3.fromRGB(255, 255, 255) -- Cor do brilho (Branco)
-Glow.Size = UDim2.new(1.5, 0, 1.5, 0)
-Glow.Position = UDim2.new(-0.25, 0, -0.25, 0)
-Glow.ImageTransparency = 0.5
-Glow.ZIndex = 1
+Glow.Image = "rbxassetid://50288246"
+Glow.ImageColor3 = Color3.fromRGB(255, 255, 255)
+Glow.Size = UDim2.new(1.8, 0, 1.8, 0)
+Glow.Position = UDim2.new(-0.4, 0, -0.4, 0)
 Glow.Parent = OpenContainer
 
--- A Logo
 local OpenLogo = Instance.new("ImageButton")
-OpenLogo.Name = "Logo"
 OpenLogo.Image = "rbxassetid://139243074283722"
 OpenLogo.Size = UDim2.new(1, 0, 1, 0)
 OpenLogo.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-OpenLogo.ZIndex = 2
 OpenLogo.Parent = OpenContainer
 Instance.new("UICorner", OpenLogo).CornerRadius = UDim.new(1, 0)
 
--- Animação do Brilho Pulsante
-local glowInfo = TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
-TweenService:Create(Glow, glowInfo, {ImageTransparency = 0.8, Size = UDim2.new(1.8, 0, 1.8, 0), Position = UDim2.new(-0.4, 0, -0.4, 0)}):Play()
+TweenService:Create(Glow, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true), {ImageTransparency = 0.8, Size = UDim2.new(1.4, 0, 1.4, 0), Position = UDim2.new(-0.2, 0, -0.2, 0)}):Play()
 
 OpenLogo.MouseButton1Click:Connect(function()
     Background.Visible = not Background.Visible
@@ -91,36 +95,35 @@ OpenLogo.MouseButton1Click:Connect(function()
     end
 end)
 
--- --- SIDEBAR E CONTEÚDO (DESIGN v1.3) ---
+-- --- ESTRUTURA INTERNA (SIDEBAR E CONTEÚDO) ---
 local SideBar = Instance.new("Frame")
-SideBar.Size = UDim2.new(0, 140, 0, 300); SideBar.Position = UDim2.new(0, 10, 0, 10)
+SideBar.Size = UDim2.new(0, 140, 0, 280); SideBar.Position = UDim2.new(0, 10, 0, 30)
 SideBar.BackgroundColor3 = Color3.fromRGB(45, 45, 45); SideBar.Parent = Background
 Instance.new("UICorner", SideBar).CornerRadius = UDim.new(0, 20)
 
 local Title = Instance.new("TextLabel")
-Title.Text = "Lux hub"; Title.Font = "GothamBold"; Title.TextSize = 26; Title.TextColor3 = Color3.fromRGB(220, 220, 220)
-Title.Position = UDim2.new(0, 15, 0, 20); Title.Size = UDim2.new(0, 110, 0, 40); Title.BackgroundTransparency = 1; Title.Parent = SideBar
+Title.Text = "Lux hub"; Title.Font = "GothamBold"; Title.TextSize = 24; Title.TextColor3 = Color3.fromRGB(220, 220, 220)
+Title.Position = UDim2.new(0, 15, 0, 15); Title.Size = UDim2.new(0, 110, 0, 30); Title.BackgroundTransparency = 1; Title.Parent = SideBar
 
 local ManTabBtn = Instance.new("TextButton")
 ManTabBtn.Text = "Man"; ManTabBtn.Font = "GothamBold"; ManTabBtn.TextColor3 = Color3.new(1,1,1)
 ManTabBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); ManTabBtn.Size = UDim2.new(0, 110, 0, 40)
-ManTabBtn.Position = UDim2.new(0, 15, 0, 80); ManTabBtn.Parent = SideBar
+ManTabBtn.Position = UDim2.new(0, 15, 0, 60); ManTabBtn.Parent = SideBar
 Instance.new("UICorner", ManTabBtn).CornerRadius = UDim.new(0, 10)
 
 local MainContent = Instance.new("Frame")
-MainContent.Size = UDim2.new(0, 350, 0, 300); MainContent.Position = UDim2.new(0, 160, 0, 10)
+MainContent.Size = UDim2.new(0, 350, 0, 280); MainContent.Position = UDim2.new(0, 160, 0, 30)
 MainContent.BackgroundColor3 = Color3.fromRGB(45, 45, 45); MainContent.Parent = Background
 Instance.new("UICorner", MainContent).CornerRadius = UDim.new(0, 20)
 
 local Ver = Instance.new("TextLabel")
-Ver.Text = "v 1.3"; Ver.Font = "Gotham"; Ver.TextSize = 14; Ver.Position = UDim2.new(1, -75, 0, 10); Ver.BackgroundTransparency = 1; Ver.TextColor3 = Color3.new(1,1,1); Ver.Parent = MainContent
+Ver.Text = "v 1.3"; Ver.Font = "Gotham"; Ver.TextColor3 = Color3.new(1,1,1); Ver.Position = UDim2.new(1, -60, 0, 5); Ver.BackgroundTransparency = 1; Ver.Parent = MainContent
 
 local Close = Instance.new("TextButton")
-Close.Text = "X"; Close.Font = "GothamBold"; Close.Position = UDim2.new(1, -35, 0, 10); Close.BackgroundTransparency = 1; Close.TextColor3 = Color3.new(1,1,1); Close.Parent = MainContent
+Close.Text = "X"; Close.Font = "GothamBold"; Close.TextColor3 = Color3.new(1,1,1); Close.Position = UDim2.new(1, -30, 0, 5); Close.BackgroundTransparency = 1; Close.Parent = MainContent
 Close.MouseButton1Click:Connect(function()
     TweenService:Create(Background, TweenInfo.new(0.2), {Size = UDim2.new(0,0,0,0)}):Play()
-    task.wait(0.2)
-    Background.Visible = false
+    task.wait(0.2); Background.Visible = false
 end)
 
 -- --- FUNÇÃO TOGGLE ---
@@ -144,7 +147,7 @@ local function AddToggle(name, pos, callback)
     end)
 end
 
--- LÓGICAS
+-- LOGICAS (ESP, SPEED, NOCLIP)
 RunService.Heartbeat:Connect(function()
     if Settings.ESP then
         for _, plr in pairs(Players:GetPlayers()) do
@@ -166,18 +169,18 @@ RunService.Stepped:Connect(function()
     end
 end)
 
--- CONTROLES
-AddToggle("Esp", UDim2.new(0.05, 0, 0, 40), function(v) Settings.ESP = v end)
-AddToggle("Noclip", UDim2.new(0.05, 0, 0, 85), function(v) Settings.Noclip = v end)
-AddToggle("Speed Active", UDim2.new(0.05, 0, 0, 130), function(v) Settings.SpeedActive = v end)
+-- COMPONENTES DA ABA MAN
+AddToggle("Esp", UDim2.new(0.05, 0, 0, 30), function(v) Settings.ESP = v end)
+AddToggle("Noclip", UDim2.new(0.05, 0, 0, 75), function(v) Settings.Noclip = v end)
+AddToggle("Speed Active", UDim2.new(0.05, 0, 0, 120), function(v) Settings.SpeedActive = v end)
 
 local SpeedInput = Instance.new("TextBox")
-SpeedInput.Size = UDim2.new(0.4, 0, 0, 35); SpeedInput.Position = UDim2.new(0.05, 0, 0, 175)
+SpeedInput.Size = UDim2.new(0.4, 0, 0, 35); SpeedInput.Position = UDim2.new(0.05, 0, 0, 165)
 SpeedInput.BackgroundColor3 = Color3.fromRGB(30,30,30); SpeedInput.TextColor3 = Color3.new(1,1,1); SpeedInput.Text = "100"; SpeedInput.Parent = MainContent
 Instance.new("UICorner", SpeedInput)
 
 local ProntoBtn = Instance.new("TextButton")
-ProntoBtn.Text = "Pronto"; ProntoBtn.Size = UDim2.new(0.4, 0, 0, 35); ProntoBtn.Position = UDim2.new(0.5, 0, 0, 175)
+ProntoBtn.Text = "Pronto"; ProntoBtn.Size = UDim2.new(0.4, 0, 0, 35); ProntoBtn.Position = UDim2.new(0.5, 0, 0, 165)
 ProntoBtn.BackgroundColor3 = Color3.fromRGB(35, 35, 35); ProntoBtn.TextColor3 = Color3.new(1,1,1); ProntoBtn.Parent = MainContent
 Instance.new("UICorner", ProntoBtn).CornerRadius = UDim.new(0, 15)
 ProntoBtn.MouseButton1Click:Connect(function() Settings.SpeedValue = tonumber(SpeedInput.Text) or 16 end)
