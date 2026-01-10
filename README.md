@@ -265,94 +265,178 @@ DropBtn.MouseButton1Click:Connect(function()
 				pBtn.Size = UDim2.new(1, 0, 0, 30)
 				pBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 				pBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-				pBtn.Parent = PlayerListFrame
-				
-				pBtn.MouseButton1Click:Connect(function()
-					Settings.TargetPlayer = plr
-					DropBtn.Text = plr.Name
-					PlayerListFrame.Visible = false
-				end)
+-- SERVIÇOS
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local LocalPlayer = Players.LocalPlayer
+
+-- CONFIGURAÇÕES
+local Settings = {
+	Noclip = false,
+	TargetPlayer = nil
+}
+
+-- --- INTERFACE PRINCIPAL ---
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "LuxHub_v1.1"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 500, 0, 300)
+MainFrame.Position = UDim2.new(0.5, -250, 0.5, -150)
+MainFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+MainFrame.BorderSizePixel = 0
+MainFrame.Visible = false
+MainFrame.Parent = ScreenGui
+
+local UICorner = Instance.new("UICorner"); UICorner.CornerRadius = UDim.new(0, 20); UICorner.Parent = MainFrame
+
+-- Título (Lado Esquerdo)
+local Title = Instance.new("TextLabel")
+Title.Text = "Lux hub"
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 24
+Title.TextColor3 = Color3.fromRGB(220, 220, 220)
+Title.Position = UDim2.new(0, 20, 0, 10)
+Title.Size = UDim2.new(0, 100, 0, 40)
+Title.BackgroundTransparency = 1
+Title.Parent = MainFrame
+
+-- INDICADOR DE VERSÃO E BOTÃO X
+local VersionLabel = Instance.new("TextLabel")
+VersionLabel.Text = "v 1.1"
+VersionLabel.Font = Enum.Font.Gotham
+VersionLabel.TextSize = 14
+VersionLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+VersionLabel.Position = UDim2.new(1, -70, 0, 10) -- Posicionado ao lado do X
+VersionLabel.Size = UDim2.new(0, 40, 0, 30)
+VersionLabel.BackgroundTransparency = 1
+VersionLabel.Parent = MainFrame
+
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Text = "X"
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.TextSize = 18
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.Position = UDim2.new(1, -35, 0, 10)
+CloseBtn.Size = UDim2.new(0, 30, 0, 30)
+CloseBtn.BackgroundTransparency = 1
+CloseBtn.Parent = MainFrame
+CloseBtn.MouseButton1Click:Connect(function() MainFrame.Visible = false end)
+
+-- --- BOTÕES DE FUNÇÃO ---
+
+-- Botão Noclip
+local NoclipBtn = Instance.new("TextButton")
+NoclipBtn.Text = "Noclip: OFF"
+NoclipBtn.Size = UDim2.new(0, 180, 0, 40)
+NoclipBtn.Position = UDim2.new(0.4, 0, 0.2, 0)
+NoclipBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+NoclipBtn.TextColor3 = Color3.new(1,1,1)
+NoclipBtn.Font = Enum.Font.GothamSemibold
+NoclipBtn.Parent = MainFrame
+local UICornerN = Instance.new("UICorner"); UICornerN.CornerRadius = UDim.new(0, 8); UICornerN.Parent = NoclipBtn
+
+local noclipConn
+NoclipBtn.MouseButton1Click:Connect(function()
+	Settings.Noclip = not Settings.Noclip
+	NoclipBtn.Text = Settings.Noclip and "Noclip: ON" or "Noclip: OFF"
+	NoclipBtn.BackgroundColor3 = Settings.Noclip and Color3.fromRGB(60, 60, 60) or Color3.fromRGB(30, 30, 30)
+	
+	if Settings.Noclip then
+		noclipConn = RunService.Stepped:Connect(function()
+			if LocalPlayer.Character then
+				for _, v in pairs(LocalPlayer.Character:GetDescendants()) do
+					if v:IsA("BasePart") and v.CanCollide then
+						v.CanCollide = false
+					end
+				end
+			end
+		end)
+	else
+		if noclipConn then noclipConn:Disconnect() end
+		if LocalPlayer.Character then
+			for _, v in pairs(LocalPlayer.Character:GetDescendants()) do
+				if v:IsA("BasePart") then v.CanCollide = true end
 			end
 		end
 	end
 end)
 
--- 4. BOTÃO "PRONTO" (Executar Teleporte)
-local ProntoBtn = Instance.new("TextButton")
-ProntoBtn.Text = "Pronto"
-ProntoBtn.Font = Enum.Font.GothamBold
-ProntoBtn.TextColor3 = TextColor
-ProntoBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-ProntoBtn.Size = UDim2.new(0.4, 0, 0, 40)
-ProntoBtn.Position = UDim2.new(0.05, 0, 0, 210)
-ProntoBtn.Parent = ContentFrame
-local UICornerPronto = Instance.new("UICorner"); UICornerPronto.CornerRadius = UDim.new(0, 20); UICornerPronto.Parent = ProntoBtn
+-- Dropdown de Players
+local DropBtn = Instance.new("TextButton")
+DropBtn.Text = "Tp Player [V]"
+DropBtn.Size = UDim2.new(0, 180, 0, 40)
+DropBtn.Position = UDim2.new(0.4, 0, 0.4, 0)
+DropBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+DropBtn.TextColor3 = Color3.new(1,1,1)
+DropBtn.Parent = MainFrame
+local UICornerD = Instance.new("UICorner"); UICornerD.CornerRadius = UDim.new(0, 8); UICornerD.Parent = DropBtn
 
-ProntoBtn.MouseButton1Click:Connect(function()
-	if Settings.TargetPlayer and Settings.TargetPlayer.Character and Settings.TargetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-		if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-			-- Lógica de Teleporte
-			LocalPlayer.Character.HumanoidRootPart.CFrame = Settings.TargetPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)
+local PlayerList = Instance.new("ScrollingFrame")
+PlayerList.Size = UDim2.new(0, 180, 0, 100)
+PlayerList.Position = UDim2.new(0.4, 0, 0.55, 0)
+PlayerList.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+PlayerList.Visible = false
+PlayerList.ZIndex = 5
+PlayerList.Parent = MainFrame
+local UIList = Instance.new("UIListLayout"); UIList.Parent = PlayerList
+
+DropBtn.MouseButton1Click:Connect(function()
+	PlayerList.Visible = not PlayerList.Visible
+	for _, child in pairs(PlayerList:GetChildren()) do if child:IsA("TextButton") then child:Destroy() end end
+	
+	for _, p in pairs(Players:GetPlayers()) do
+		if p ~= LocalPlayer then
+			local b = Instance.new("TextButton")
+			b.Size = UDim2.new(1, 0, 0, 25)
+			b.Text = p.Name
+			b.BackgroundColor3 = Color3.fromRGB(40,40,40)
+			b.TextColor3 = Color3.new(1,1,1)
+			b.Parent = PlayerList
+			b.MouseButton1Click:Connect(function()
+				Settings.TargetPlayer = p
+				DropBtn.Text = p.Name
+				PlayerList.Visible = false -- Fecha a aba automaticamente
+			end)
 		end
-	else
-		DropBtn.Text = "Jogador inválido"
-		wait(1)
-		DropBtn.Text = "Selecione..."
 	end
 end)
 
+-- Botão Pronto (Teleport)
+local ProntoBtn = Instance.new("TextButton")
+ProntoBtn.Text = "Pronto"
+ProntoBtn.Size = UDim2.new(0, 100, 0, 35)
+ProntoBtn.Position = UDim2.new(0.4, 0, 0.75, 0)
+ProntoBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+ProntoBtn.TextColor3 = Color3.new(1,1,1)
+ProntoBtn.Font = Enum.Font.GothamBold
+ProntoBtn.Parent = MainFrame
+local UICornerP = Instance.new("UICorner"); UICornerP.CornerRadius = UDim.new(0, 15); UICornerP.Parent = ProntoBtn
 
--- --- BOTÃO PARA ABRIR O SCRIPT (Toggle Mini) ---
-local OpenFrame = Instance.new("Frame")
-OpenFrame.Size = UDim2.new(0, 100, 0, 30)
-OpenFrame.Position = UDim2.new(0, 10, 0.5, 0) -- Meio esquerda da tela
-OpenFrame.BackgroundColor3 = DarkBg
-OpenFrame.Parent = ScreenGui
-local UICornerOpen = Instance.new("UICorner"); UICornerOpen.CornerRadius = UDim.new(0, 8); UICornerOpen.Parent = OpenFrame
+ProntoBtn.MouseButton1Click:Connect(function()
+	if Settings.TargetPlayer and Settings.TargetPlayer.Character then
+		local root = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+		local targetRoot = Settings.TargetPlayer.Character:FindFirstChild("HumanoidRootPart")
+		if root and targetRoot then
+			root.CFrame = targetRoot.CFrame * CFrame.new(0, 0, 3)
+		end
+	end
+end)
 
+-- BOTÃO PARA ABRIR O HUB
 local OpenBtn = Instance.new("TextButton")
-OpenBtn.Size = UDim2.new(1, 0, 1, 0)
-OpenBtn.BackgroundTransparency = 1
 OpenBtn.Text = "Abrir Lux"
-OpenBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-OpenBtn.Font = Enum.Font.GothamBold
-OpenBtn.Parent = OpenFrame
+OpenBtn.Size = UDim2.new(0, 100, 0, 30)
+OpenBtn.Position = UDim2.new(0, 10, 0.5, 0)
+OpenBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+OpenBtn.TextColor3 = Color3.new(1,1,1)
+OpenBtn.Parent = ScreenGui
+local UICornerO = Instance.new("UICorner"); UICornerO.CornerRadius = UDim.new(0, 5); UICornerO.Parent = OpenBtn
 
 OpenBtn.MouseButton1Click:Connect(function()
 	MainFrame.Visible = not MainFrame.Visible
-end)
-
--- Arrastar Janela (Draggable)
-local UserInputService = game:GetService("UserInputService")
-local dragging, dragInput, dragStart, startPos
-
-local function update(input)
-	local delta = input.Position - dragStart
-	MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-end
-
-MainFrame.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-		dragging = true
-		dragStart = input.Position
-		startPos = MainFrame.Position
-		
-		input.Changed:Connect(function()
-			if input.UserInputState == Enum.UserInputState.End then
-				dragging = false
-			end
-		end)
-	end
-end)
-
-MainFrame.InputChanged:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-		dragInput = input
-	end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-	if input == dragInput and dragging then
-		update(input)
-	end
 end)
