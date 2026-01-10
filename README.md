@@ -152,5 +152,4 @@ end)
 -- Botão Abrir
 local Open = Instance.new("TextButton")
 Open.Text = "Lux hub"; Open.Size = UDim2.new(0, 100, 0, 30); Open.Position = UDim2.new(0, 10, 0.4, 0); Open.Parent = ScreenGui
-Open.MouseButton1Click:Connect(function() Background.Visible = not Backg
-round.Visible end)
+Open.MouseButton1Click:Connect(function() Background.Visible = not Background.Visible end)
