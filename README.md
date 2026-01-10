@@ -14,7 +14,7 @@ local Settings = {
 
 -- --- INTERFACE PRINCIPAL ---
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "LuxHub_V13_Draggable"
+ScreenGui.Name = "LuxHub_V13_Glow"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
@@ -24,9 +24,10 @@ Background.Position = UDim2.new(0.5, -260, 0.5, -160)
 Background.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 Background.Parent = ScreenGui
 Background.Visible = false
+Background.ClipsDescendants = true
 Instance.new("UICorner", Background).CornerRadius = UDim.new(0, 25)
 
--- FUNÇÃO PARA TORNAR ARRASTÁVEL (DRAG SYSTEM)
+-- FUNÇÃO DRAG
 local function MakeDraggable(gui)
     local dragging, dragInput, dragStart, startPos
     gui.InputBegan:Connect(function(input)
@@ -34,9 +35,6 @@ local function MakeDraggable(gui)
             dragging = true
             dragStart = input.Position
             startPos = gui.Position
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then dragging = false end
-            end)
         end
     end)
     gui.InputChanged:Connect(function(input)
@@ -49,10 +47,51 @@ local function MakeDraggable(gui)
         end
     end)
 end
+MakeDraggable(Background)
 
-MakeDraggable(Background) -- Ativa o arrastar no fundo preto
+-- --- BOTÃO DE ABRIR COM BRILHO (GLOW) ---
+local OpenContainer = Instance.new("Frame") -- Container para o botão e o brilho
+OpenContainer.Size = UDim2.new(0, 60, 0, 60)
+OpenContainer.Position = UDim2.new(0, 20, 0.5, -30)
+OpenContainer.BackgroundTransparency = 1
+OpenContainer.Visible = false
+OpenContainer.Parent = ScreenGui
 
--- SIDEBAR
+-- O Brilho (Glow)
+local Glow = Instance.new("ImageLabel")
+Glow.Name = "GlowEffect"
+Glow.BackgroundTransparency = 1
+Glow.Image = "rbxassetid://50288246" -- Asset de sombra circular para efeito de brilho
+Glow.ImageColor3 = Color3.fromRGB(255, 255, 255) -- Cor do brilho (Branco)
+Glow.Size = UDim2.new(1.5, 0, 1.5, 0)
+Glow.Position = UDim2.new(-0.25, 0, -0.25, 0)
+Glow.ImageTransparency = 0.5
+Glow.ZIndex = 1
+Glow.Parent = OpenContainer
+
+-- A Logo
+local OpenLogo = Instance.new("ImageButton")
+OpenLogo.Name = "Logo"
+OpenLogo.Image = "rbxassetid://139243074283722"
+OpenLogo.Size = UDim2.new(1, 0, 1, 0)
+OpenLogo.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+OpenLogo.ZIndex = 2
+OpenLogo.Parent = OpenContainer
+Instance.new("UICorner", OpenLogo).CornerRadius = UDim.new(1, 0)
+
+-- Animação do Brilho Pulsante
+local glowInfo = TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
+TweenService:Create(Glow, glowInfo, {ImageTransparency = 0.8, Size = UDim2.new(1.8, 0, 1.8, 0), Position = UDim2.new(-0.4, 0, -0.4, 0)}):Play()
+
+OpenLogo.MouseButton1Click:Connect(function()
+    Background.Visible = not Background.Visible
+    if Background.Visible then
+        Background.Size = UDim2.new(0, 0, 0, 0)
+        TweenService:Create(Background, TweenInfo.new(0.3, Enum.EasingStyle.BackOut), {Size = UDim2.new(0, 520, 0, 320)}):Play()
+    end
+end)
+
+-- --- SIDEBAR E CONTEÚDO (DESIGN v1.3) ---
 local SideBar = Instance.new("Frame")
 SideBar.Size = UDim2.new(0, 140, 0, 300); SideBar.Position = UDim2.new(0, 10, 0, 10)
 SideBar.BackgroundColor3 = Color3.fromRGB(45, 45, 45); SideBar.Parent = Background
@@ -68,7 +107,6 @@ ManTabBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30); ManTabBtn.Size = UDim2.
 ManTabBtn.Position = UDim2.new(0, 15, 0, 80); ManTabBtn.Parent = SideBar
 Instance.new("UICorner", ManTabBtn).CornerRadius = UDim.new(0, 10)
 
--- CONTEÚDO
 local MainContent = Instance.new("Frame")
 MainContent.Size = UDim2.new(0, 350, 0, 300); MainContent.Position = UDim2.new(0, 160, 0, 10)
 MainContent.BackgroundColor3 = Color3.fromRGB(45, 45, 45); MainContent.Parent = Background
@@ -79,17 +117,13 @@ Ver.Text = "v 1.3"; Ver.Font = "Gotham"; Ver.TextSize = 14; Ver.Position = UDim2
 
 local Close = Instance.new("TextButton")
 Close.Text = "X"; Close.Font = "GothamBold"; Close.Position = UDim2.new(1, -35, 0, 10); Close.BackgroundTransparency = 1; Close.TextColor3 = Color3.new(1,1,1); Close.Parent = MainContent
-Close.MouseButton1Click:Connect(function() Background.Visible = false end)
+Close.MouseButton1Click:Connect(function()
+    TweenService:Create(Background, TweenInfo.new(0.2), {Size = UDim2.new(0,0,0,0)}):Play()
+    task.wait(0.2)
+    Background.Visible = false
+end)
 
--- BOTÃO DE ABRIR (LOGO)
-local OpenLogo = Instance.new("ImageButton")
-OpenLogo.Image = "rbxassetid://139243074283722"
-OpenLogo.Size = UDim2.new(0, 60, 0, 60); OpenLogo.Position = UDim2.new(0, 20, 0.5, -30)
-OpenLogo.BackgroundColor3 = Color3.fromRGB(30, 30, 30); OpenLogo.Visible = false; OpenLogo.Parent = ScreenGui
-Instance.new("UICorner", OpenLogo).CornerRadius = UDim.new(1, 0)
-OpenLogo.MouseButton1Click:Connect(function() Background.Visible = not Background.Visible end)
-
--- FUNÇÃO TOGGLE
+-- --- FUNÇÃO TOGGLE ---
 local function AddToggle(name, pos, callback)
     local TFrame = Instance.new("Frame")
     TFrame.Size = UDim2.new(0.9, 0, 0, 35); TFrame.Position = pos; TFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30); TFrame.Parent = MainContent
@@ -110,7 +144,7 @@ local function AddToggle(name, pos, callback)
     end)
 end
 
--- LOGICAS
+-- LÓGICAS
 RunService.Heartbeat:Connect(function()
     if Settings.ESP then
         for _, plr in pairs(Players:GetPlayers()) do
@@ -132,7 +166,7 @@ RunService.Stepped:Connect(function()
     end
 end)
 
--- BOTÕES
+-- CONTROLES
 AddToggle("Esp", UDim2.new(0.05, 0, 0, 40), function(v) Settings.ESP = v end)
 AddToggle("Noclip", UDim2.new(0.05, 0, 0, 85), function(v) Settings.Noclip = v end)
 AddToggle("Speed Active", UDim2.new(0.05, 0, 0, 130), function(v) Settings.SpeedActive = v end)
@@ -152,13 +186,12 @@ ProntoBtn.MouseButton1Click:Connect(function() Settings.SpeedValue = tonumber(Sp
 local function RunIntro()
     local Blur = Instance.new("BlurEffect", workspace.CurrentCamera); Blur.Size = 0
     local IntroText = Instance.new("TextLabel", ScreenGui)
-    IntroText.Text = "Lux hub"; IntroText.Font = "GothamBold"; IntroText.TextSize = 80; IntroText.TextColor3 = Color3.new(1,1,1)
-    IntroText.BackgroundTransparency = 1; IntroText.Size = UDim2.new(1,0,1,0); IntroText.Position = UDim2.new(0,0,1,0)
+    IntroText.Text = "Lux hub"; IntroText.Font = "GothamBold"; IntroText.TextSize = 80; IntroText.TextColor3 = Color3.new(1,1,1); IntroText.BackgroundTransparency = 1; IntroText.Size = UDim2.new(1,0,1,0); IntroText.Position = UDim2.new(0,0,1,0)
     TweenService:Create(Blur, TweenInfo.new(1.5), {Size = 25}):Play()
     TweenService:Create(IntroText, TweenInfo.new(1.5), {Position = UDim2.new(0,0,0,0)}):Play()
     task.wait(2.5)
     TweenService:Create(Blur, TweenInfo.new(0.5), {Size = 0}):Play()
     TweenService:Create(IntroText, TweenInfo.new(0.5), {TextTransparency = 1}):Play()
-    task.wait(0.5); Blur:Destroy(); IntroText:Destroy(); OpenLogo.Visible = true
+    task.wait(0.5); Blur:Destroy(); IntroText:Destroy(); OpenContainer.Visible = true
 end
 task.spawn(RunIntro)
