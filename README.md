@@ -4,7 +4,7 @@ local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
-local Lighting = game:GetService("Lighting") -- Serviço de Iluminação para o Blur
+local Lighting = game:GetService("Lighting") -- Necessário para o Blur
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
@@ -32,7 +32,7 @@ local Colors = {
 
 -- GUI
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "LuxHub_BlurLoading"
+ScreenGui.Name = "LuxHub_BlurFinal"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
@@ -58,40 +58,42 @@ local function MakeDraggable(gui)
 end
 
 -- ==========================================
--- EFEITO BLUR (DESFOQUE)
+-- EFEITO BLUR (DESFOQUE DA TELA)
 -- ==========================================
 local BlurEffect = Instance.new("BlurEffect")
-BlurEffect.Size = 0 -- Começa em 0 e aumenta
+BlurEffect.Size = 0 -- Começa sem blur
 BlurEffect.Parent = Lighting
 
--- Animação de entrada do Blur
+-- Anima o Blur para aparecer (0 -> 24)
 TweenService:Create(BlurEffect, TweenInfo.new(0.5), {Size = 24}):Play()
 
--- LOADING SCREEN (SEM FUNDO, APENAS ELEMENTOS)
-local LoadingFrame = Instance.new("Frame")
-LoadingFrame.Size = UDim2.new(1, 0, 1, 0) -- Ocupa tela toda para centralizar
-LoadingFrame.Position = UDim2.new(0, 0, 0, 0)
-LoadingFrame.BackgroundTransparency = 1 -- TOTALMENTE TRANSPARENTE
-LoadingFrame.Parent = ScreenGui
+-- ==========================================
+-- TELA DE LOADING (FLUTUANTE)
+-- ==========================================
+-- Container invisível para centralizar tudo
+local LoadingContainer = Instance.new("Frame")
+LoadingContainer.Size = UDim2.new(1, 0, 1, 0)
+LoadingContainer.BackgroundTransparency = 1
+LoadingContainer.Parent = ScreenGui
 
 local LoadTitle = Instance.new("TextLabel")
 LoadTitle.Text = "Loading..."
-LoadTitle.Font = Enum.Font.GothamBold; LoadTitle.TextSize = 32 -- Texto um pouco maior
+LoadTitle.Font = Enum.Font.GothamBold
+LoadTitle.TextSize = 32
 LoadTitle.TextColor3 = Colors.TextSelected
 LoadTitle.Size = UDim2.new(0, 200, 0, 50)
-LoadTitle.Position = UDim2.new(0.5, -100, 0.45, -25) -- Centralizado
-LoadTitle.BackgroundTransparency = 1; LoadTitle.Parent = LoadingFrame
+LoadTitle.Position = UDim2.new(0.5, -100, 0.45, -25) -- Bem no meio
+LoadTitle.BackgroundTransparency = 1
+LoadTitle.Parent = LoadingContainer
 
--- Barra de Fundo
 local BarBG = Instance.new("Frame")
-BarBG.Size = UDim2.new(0, 300, 0, 10) -- Barra mais larga
-BarBG.Position = UDim2.new(0.5, -150, 0.55, 0)
+BarBG.Size = UDim2.new(0, 300, 0, 10)
+BarBG.Position = UDim2.new(0.5, -150, 0.55, 0) -- Embaixo do texto
 BarBG.BackgroundColor3 = Color3.fromRGB(40, 20, 70)
 BarBG.BorderSizePixel = 0
-BarBG.Parent = LoadingFrame
+BarBG.Parent = LoadingContainer
 Instance.new("UICorner", BarBG).CornerRadius = UDim.new(1, 0)
 
--- Barra de Preenchimento
 local BarFill = Instance.new("Frame")
 BarFill.Size = UDim2.new(0, 0, 1, 0)
 BarFill.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
@@ -118,7 +120,7 @@ Glow.BackgroundTransparency = 1; Glow.Image = "rbxassetid://50288246"
 Glow.Size = UDim2.new(1.6, 0, 1.6, 0); Glow.Position = UDim2.new(-0.3, 0, -0.3, 0); Glow.Parent = OpenBtn
 
 -- ==========================================
--- JANELA PRINCIPAL (SLIDE ANIMATION)
+-- JANELA PRINCIPAL (CLEAN - SEM LISTA TP)
 -- ==========================================
 local MainFrame = Instance.new("Frame")
 MainFrame.Size = UDim2.new(0, 480, 0, 280)
@@ -166,7 +168,7 @@ local Fix = Instance.new("Frame"); Fix.Size = UDim2.new(0,15,1,0); Fix.Position 
 local Title = Instance.new("TextLabel"); Title.Text = "Lux Hub"; Title.Font = Enum.Font.GothamBold; Title.TextSize = 22; Title.TextColor3 = Colors.TextSelected
 Title.Size = UDim2.new(1, 0, 0, 30); Title.Position = UDim2.new(0, 0, 0, 20); Title.BackgroundTransparency = 1; Title.TextXAlignment = Enum.TextXAlignment.Center; Title.Parent = Sidebar
 
-local SubVer = Instance.new("TextLabel"); SubVer.Text = "V1.7"; SubVer.Font = Enum.Font.Gotham; SubVer.TextSize = 12; SubVer.TextColor3 = Color3.fromRGB(180,180,180)
+local SubVer = Instance.new("TextLabel"); SubVer.Text = "V2.0"; SubVer.Font = Enum.Font.Gotham; SubVer.TextSize = 12; SubVer.TextColor3 = Color3.fromRGB(180,180,180)
 SubVer.Size = UDim2.new(1, 0, 0, 20); SubVer.Position = UDim2.new(0, 0, 0, 45); SubVer.BackgroundTransparency = 1; SubVer.TextXAlignment = Enum.TextXAlignment.Center; SubVer.Parent = Sidebar
 
 -- Containers
@@ -232,21 +234,20 @@ AddToggle("Fly", function(v) Settings.Fly = v end)
 AddToggle("Invisible", function(v) Settings.Invisible = v; if LocalPlayer.Character then for _,p in pairs(LocalPlayer.Character:GetDescendants()) do if p:IsA("BasePart") or p:IsA("Decal") then p.Transparency = v and 1 or 0 end end end end)
 
 -- ==========================================
--- LOOP DE LOADING COM BLUR
+-- ANIMATION LOOP (BLUR)
 -- ==========================================
 local tw = TweenService:Create(BarFill, TweenInfo.new(3), {Size = UDim2.new(1, 0, 1, 0)})
 tw:Play()
 tw.Completed:Connect(function()
 	task.wait(0.5)
-	
 	-- Remove o Blur Suavemente
 	local blurOff = TweenService:Create(BlurEffect, TweenInfo.new(1), {Size = 0})
 	blurOff:Play()
 	
 	blurOff.Completed:Connect(function()
-		BlurEffect:Destroy() -- Deleta o blur da iluminação
-		LoadingFrame:Destroy() -- Deleta a GUI de loading
-		OpenBtn.Visible = true -- Mostra o botão do script
+		BlurEffect:Destroy()
+		LoadingContainer:Destroy()
+		OpenBtn.Visible = true
 	end)
 end)
 
