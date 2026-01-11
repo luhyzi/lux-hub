@@ -31,7 +31,7 @@ local Colors = {
 
 -- GUI
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "LuxHub_NoTP"
+ScreenGui.Name = "LuxHub_SpeedFix"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
@@ -100,10 +100,10 @@ Glow.BackgroundTransparency = 1; Glow.Image = "rbxassetid://50288246"
 Glow.Size = UDim2.new(1.6, 0, 1.6, 0); Glow.Position = UDim2.new(-0.3, 0, -0.3, 0); Glow.Parent = OpenBtn
 
 -- ==========================================
--- JANELA PRINCIPAL (SLIDE ANIMATION)
+-- JANELA PRINCIPAL
 -- ==========================================
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 480, 0, 300)
+MainFrame.Size = UDim2.new(0, 480, 0, 280)
 MainFrame.Position = UDim2.new(0.5, -240, 1.5, 0) 
 MainFrame.BackgroundColor3 = Colors.MainBG
 MainFrame.Visible = false
@@ -181,6 +181,7 @@ local function AddToggle(text, callback)
 	B.MouseButton1Click:Connect(function() s = not s; local colorInfo = TweenInfo.new(0.3); TweenService:Create(B, colorInfo, {BackgroundColor3 = s and Colors.ToggleOn or Colors.ToggleOff}):Play(); callback(s) end)
 end
 
+-- SPEED COM CORREÇÃO
 local function AddSpeed()
 	local F = Instance.new("Frame"); F.Size = UDim2.new(1, -10, 0, 40); F.BackgroundColor3 = Colors.ItemBG; F.Parent = MainPage
 	Instance.new("UICorner", F).CornerRadius = UDim.new(0, 10)
@@ -191,14 +192,22 @@ local function AddSpeed()
 	local B = Instance.new("TextButton"); B.Text = ""; B.Size = UDim2.new(0, 24, 0, 24); B.Position = UDim2.new(1, -35, 0.5, -12); B.BackgroundColor3 = Colors.ToggleOff; B.Parent = F
 	Instance.new("UICorner", B).CornerRadius = UDim.new(1, 0)
 	local s = false
-	B.MouseButton1Click:Connect(function() s = not s; local colorInfo = TweenInfo.new(0.3); TweenService:Create(B, colorInfo, {BackgroundColor3 = s and Colors.ToggleOn or Colors.ToggleOff}):Play(); Settings.Speed = s end)
+	B.MouseButton1Click:Connect(function() 
+		s = not s
+		local colorInfo = TweenInfo.new(0.3)
+		TweenService:Create(B, colorInfo, {BackgroundColor3 = s and Colors.ToggleOn or Colors.ToggleOff}):Play()
+		Settings.Speed = s
+		-- FIX: SE DESATIVAR, VOLTA A VELOCIDADE PADRÃO (16)
+		if not s and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+			LocalPlayer.Character.Humanoid.WalkSpeed = 16
+		end
+	end)
 end
 
 local Hop = Instance.new("TextButton"); Hop.Text = "Server Hop"; Hop.Size = UDim2.new(0, 140, 0, 40); Hop.Position = UDim2.new(0, 10, 0, 10); Hop.BackgroundColor3 = Colors.ItemBG; Hop.TextColor3 = Colors.Text; Hop.Font = Enum.Font.GothamBold; Hop.Parent = ServerPage
 Instance.new("UICorner", Hop).CornerRadius = UDim.new(0, 10)
 Hop.MouseButton1Click:Connect(function() local Servers = HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Asc&limit=100")); for _, s in pairs(Servers.data) do if s.playing ~= s.maxPlayers then TeleportService:TeleportToPlaceInstance(game.PlaceId, s.id, LocalPlayer) end end end)
 
--- ADICIONANDO FUNÇÕES (SEM O TP)
 AddToggle("Esp", function(v) Settings.ESP = v end)
 AddToggle("No Clip", function(v) Settings.Noclip = v end)
 AddSpeed()
