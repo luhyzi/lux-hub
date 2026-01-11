@@ -31,7 +31,7 @@ local Colors = {
 
 -- GUI
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "LuxHub_TPFix"
+ScreenGui.Name = "LuxHub_NoTP"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
@@ -194,63 +194,16 @@ local function AddSpeed()
 	B.MouseButton1Click:Connect(function() s = not s; local colorInfo = TweenInfo.new(0.3); TweenService:Create(B, colorInfo, {BackgroundColor3 = s and Colors.ToggleOn or Colors.ToggleOff}):Play(); Settings.Speed = s end)
 end
 
--- ==========================================
--- TP FIXO & OTIMIZADO
--- ==========================================
-local function AddTP()
-	local C = Instance.new("Frame"); C.Size = UDim2.new(1, -10, 0, 150); C.BackgroundTransparency = 1; C.Parent = MainPage
-	
-	-- Lista com Scroll Automático
-	local List = Instance.new("ScrollingFrame"); 
-	List.Size = UDim2.new(1, 0, 1, 0); 
-	List.BackgroundColor3 = Colors.ItemBG; 
-	List.Parent = C
-	List.AutomaticCanvasSize = Enum.AutomaticSize.Y -- Importante: Ajusta scroll sozinho
-	List.CanvasSize = UDim2.new(0,0,0,0)
-	
-	Instance.new("UICorner", List).CornerRadius = UDim.new(0, 10)
-	local LL = Instance.new("UIListLayout"); LL.Padding = UDim.new(0, 2); LL.Parent = List
-
-	local function Refresh()
-		for _,v in pairs(List:GetChildren()) do if v:IsA("TextButton") or v:IsA("TextLabel") then v:Destroy() end end
-		
-		local Title = Instance.new("TextLabel")
-		Title.Size = UDim2.new(1,0,0,25); Title.Text = "Click Player to TP (Hover to Refresh)"; Title.TextColor3 = Colors.Accent; Title.BackgroundTransparency = 1; Title.Font = Enum.Font.GothamBold; Title.Parent = List
-		
-		for _,p in pairs(Players:GetPlayers()) do
-			if p ~= LocalPlayer then
-				local b = Instance.new("TextButton"); b.Size = UDim2.new(1,0,0,35); b.Text = p.Name; b.TextColor3 = Colors.Text; b.BackgroundColor3 = Colors.ItemBG; b.BorderSizePixel = 0; b.Parent = List
-				
-				b.MouseButton1Click:Connect(function()
-					-- CORREÇÃO: Pega o personagem ATUAL na hora do clique
-					if p.Character and p.Character:FindFirstChild("HumanoidRootPart") and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-						-- Teleporta 3 studs acima para evitar ficar preso no chão
-						LocalPlayer.Character.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame * CFrame.new(0, 3, 2)
-						b.Text = "Teleported!"
-						task.wait(1)
-						b.Text = p.Name
-					else
-						b.Text = "Player not found/dead"
-						task.wait(1)
-						b.Text = p.Name
-					end
-				end)
-			end
-		end
-	end
-	List.MouseEnter:Connect(Refresh); Refresh()
-end
-
 local Hop = Instance.new("TextButton"); Hop.Text = "Server Hop"; Hop.Size = UDim2.new(0, 140, 0, 40); Hop.Position = UDim2.new(0, 10, 0, 10); Hop.BackgroundColor3 = Colors.ItemBG; Hop.TextColor3 = Colors.Text; Hop.Font = Enum.Font.GothamBold; Hop.Parent = ServerPage
 Instance.new("UICorner", Hop).CornerRadius = UDim.new(0, 10)
 Hop.MouseButton1Click:Connect(function() local Servers = HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Asc&limit=100")); for _, s in pairs(Servers.data) do if s.playing ~= s.maxPlayers then TeleportService:TeleportToPlaceInstance(game.PlaceId, s.id, LocalPlayer) end end end)
 
+-- ADICIONANDO FUNÇÕES (SEM O TP)
 AddToggle("Esp", function(v) Settings.ESP = v end)
 AddToggle("No Clip", function(v) Settings.Noclip = v end)
 AddSpeed()
 AddToggle("Fly", function(v) Settings.Fly = v end)
 AddToggle("Invisible", function(v) Settings.Invisible = v; if LocalPlayer.Character then for _,p in pairs(LocalPlayer.Character:GetDescendants()) do if p:IsA("BasePart") or p:IsA("Decal") then p.Transparency = v and 1 or 0 end end end end)
-AddTP()
 
 -- Loops
 local tw = TweenService:Create(BarFill, TweenInfo.new(3), {Size = UDim2.new(1, 0, 1, 0)}); tw:Play()
