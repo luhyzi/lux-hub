@@ -278,4 +278,4 @@ RunService.RenderStepped:Connect(function()
 	else
 		if LocalPlayer.Character then
 			local root = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-			if root then if root:FindFirstChild("LuxFlyVelocity") then root.LuxFlyVelocity:Destroy() end; if root:FindFirstChild("LuxFlyGyro") then root.LuxFlyGyro:Destroy() en
+			if root then if root:FindFirstChild("LuxFlyVelocity") then root.LuxFlyVelocity:Destroy() end; if root:FindFirstChild("LuxFlyGyro") then root.LuxFlyGyro:Destroy()
