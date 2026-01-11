@@ -32,7 +32,7 @@ local Colors = {
 
 -- GUI
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "LuxHub_PerfectFly"
+ScreenGui.Name = "LuxHub_VideoAnim"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
@@ -115,15 +115,23 @@ local isOpen = false; local isAnimating = false
 OpenBtn.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then isDraggingBtn = false end end)
 OpenBtn.InputChanged:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseMovement then isDraggingBtn = true end end)
 
+-- ==========================================
+-- ANIMAÇÃO DE SLIDE (IGUAL AO VÍDEO)
+-- ==========================================
 OpenBtn.MouseButton1Click:Connect(function()
 	if isAnimating then return end; isAnimating = true
+	
 	if isOpen then
+		-- FECHAR (Desliza para baixo suavemente)
 		local closePos = UDim2.new(MainFrame.Position.X.Scale, MainFrame.Position.X.Offset, 1.5, 0)
-		local closeTween = TweenService:Create(MainFrame, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Position = closePos})
+		-- Mudei para Quart + In para sair acelerando suave
+		local closeTween = TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {Position = closePos})
 		closeTween:Play(); closeTween.Completed:Connect(function() MainFrame.Visible = false; isAnimating = false end)
 	else
+		-- ABRIR (Desliza de baixo para cima suavemente)
 		MainFrame.Visible = true; MainFrame.Position = UDim2.new(0.5, -240, 1.5, 0) 
-		local openTween = TweenService:Create(MainFrame, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Position = UDim2.new(0.5, -240, 0.4, -150)})
+		-- Mudei para Quart + Out para frear suavemente no final
+		local openTween = TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2.new(0.5, -240, 0.4, -150)})
 		openTween:Play(); openTween.Completed:Connect(function() isAnimating = false end)
 	end
 	isOpen = not isOpen
@@ -133,7 +141,7 @@ end)
 local Sidebar = Instance.new("Frame"); Sidebar.Size = UDim2.new(0, 140, 1, 0); Sidebar.BackgroundColor3 = Colors.Sidebar; Sidebar.Parent = MainFrame; Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 20)
 local Fix = Instance.new("Frame"); Fix.Size = UDim2.new(0,15,1,0); Fix.Position = UDim2.new(1,-15,0,0); Fix.BackgroundColor3 = Colors.Sidebar; Fix.BorderSizePixel=0; Fix.Parent=Sidebar
 local Title = Instance.new("TextLabel"); Title.Text = "Lux Hub"; Title.Font = Enum.Font.GothamBold; Title.TextSize = 24; Title.TextColor3 = Colors.TextSelected; Title.Size = UDim2.new(1, 0, 0, 30); Title.Position = UDim2.new(0, 0, 0, 20); Title.BackgroundTransparency = 1; Title.TextXAlignment = Enum.TextXAlignment.Center; Title.Parent = Sidebar
-local SubVer = Instance.new("TextLabel"); SubVer.Text = "V2.5"; SubVer.Font = Enum.Font.Gotham; SubVer.TextSize = 14; SubVer.TextColor3 = Color3.fromRGB(180,180,180); SubVer.Size = UDim2.new(1, 0, 0, 20); SubVer.Position = UDim2.new(0, 0, 0, 45); SubVer.BackgroundTransparency = 1; SubVer.TextXAlignment = Enum.TextXAlignment.Center; SubVer.Parent = Sidebar
+local SubVer = Instance.new("TextLabel"); SubVer.Text = "V2.6"; SubVer.Font = Enum.Font.Gotham; SubVer.TextSize = 14; SubVer.TextColor3 = Color3.fromRGB(180,180,180); SubVer.Size = UDim2.new(1, 0, 0, 20); SubVer.Position = UDim2.new(0, 0, 0, 45); SubVer.BackgroundTransparency = 1; SubVer.TextXAlignment = Enum.TextXAlignment.Center; SubVer.Parent = Sidebar
 
 -- Containers & Tabs
 local PageContainer = Instance.new("Frame"); PageContainer.Size = UDim2.new(1, -150, 1, -20); PageContainer.Position = UDim2.new(0, 150, 0, 10); PageContainer.BackgroundTransparency = 1; PageContainer.Parent = MainFrame
@@ -184,60 +192,28 @@ RunService.RenderStepped:Connect(function() if Settings.ESP then for _, p in pai
 RunService.Stepped:Connect(function() if Settings.Noclip and LocalPlayer.Character then for _,v in pairs(LocalPlayer.Character:GetDescendants()) do if v:IsA("BasePart") then v.CanCollide = false end end end end)
 RunService.Heartbeat:Connect(function() if Settings.Speed and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then LocalPlayer.Character.Humanoid.WalkSpeed = Settings.SpeedVal end end)
 
--- FLY CORRIGIDO (V2.5 LÓGICA REFEITA)
+-- FLY CORRIGIDO (V2.5)
 RunService.RenderStepped:Connect(function()
 	if Settings.Fly and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
 		local root = LocalPlayer.Character.HumanoidRootPart
 		local hum = LocalPlayer.Character.Humanoid
-
-		-- Cria os componentes físicos se não existirem
 		if not root:FindFirstChild("LuxFlyVelocity") then
-			local bv = Instance.new("BodyVelocity")
-			bv.Name = "LuxFlyVelocity"
-			bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge) -- Força Infinita para não cair
-			bv.Velocity = Vector3.new(0, 0, 0)
-			bv.Parent = root
-
-			local bg = Instance.new("BodyGyro")
-			bg.Name = "LuxFlyGyro"
-			bg.MaxTorque = Vector3.new(9e9, 9e9, 9e9)
-			bg.P = 10000
-			bg.D = 100
-			bg.CFrame = root.CFrame
-			bg.Parent = root
+			local bv = Instance.new("BodyVelocity"); bv.Name = "LuxFlyVelocity"; bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge); bv.Velocity = Vector3.new(0, 0, 0); bv.Parent = root
+			local bg = Instance.new("BodyGyro"); bg.Name = "LuxFlyGyro"; bg.MaxTorque = Vector3.new(9e9, 9e9, 9e9); bg.P = 10000; bg.D = 100; bg.CFrame = root.CFrame; bg.Parent = root
 		end
-
-		local bv = root:FindFirstChild("LuxFlyVelocity")
-		local bg = root:FindFirstChild("LuxFlyGyro")
-
-		hum.PlatformStand = true -- Desativa física do personagem para voar melhor
-
-		-- Controles
+		local bv = root:FindFirstChild("LuxFlyVelocity"); local bg = root:FindFirstChild("LuxFlyGyro")
+		hum.PlatformStand = true
 		local CONTROL = {F = 0, B = 0, L = 0, R = 0}
-		if UserInputService:IsKeyDown(Enum.KeyCode.W) then CONTROL.F = 1 end
-		if UserInputService:IsKeyDown(Enum.KeyCode.S) then CONTROL.B = -1 end
-		if UserInputService:IsKeyDown(Enum.KeyCode.A) then CONTROL.L = -1 end
-		if UserInputService:IsKeyDown(Enum.KeyCode.D) then CONTROL.R = 1 end
-
-		-- Direção baseada na câmera
+		if UserInputService:IsKeyDown(Enum.KeyCode.W) then CONTROL.F = 1 end; if UserInputService:IsKeyDown(Enum.KeyCode.S) then CONTROL.B = -1 end
+		if UserInputService:IsKeyDown(Enum.KeyCode.A) then CONTROL.L = -1 end; if UserInputService:IsKeyDown(Enum.KeyCode.D) then CONTROL.R = 1 end
 		local direction = (Camera.CFrame.LookVector * (CONTROL.F + CONTROL.B)) + ((Camera.CFrame * CFrame.new(CONTROL.L + CONTROL.R, 0, 0).Position) - Camera.CFrame.Position)
-
-		local flySpeed = 50
-		if Settings.Speed then flySpeed = Settings.SpeedVal end -- Usa a velocidade configurada se estiver ativa
-
-		bv.Velocity = direction * flySpeed
-		bg.CFrame = Camera.CFrame -- Gira o personagem com a câmera
-
+		local flySpeed = Settings.Speed and Settings.SpeedVal or 50
+		bv.Velocity = direction * flySpeed; bg.CFrame = Camera.CFrame
 	else
-		-- Desativa e Limpa
 		if LocalPlayer.Character then
 			local root = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-			if root then
-				if root:FindFirstChild("LuxFlyVelocity") then root.LuxFlyVelocity:Destroy() end
-				if root:FindFirstChild("LuxFlyGyro") then root.LuxFlyGyro:Destroy() end
-			end
-			local hum = LocalPlayer.Character:FindFirstChild("Humanoid")
-			if hum then hum.PlatformStand = false end
+			if root then if root:FindFirstChild("LuxFlyVelocity") then root.LuxFlyVelocity:Destroy() end; if root:FindFirstChild("LuxFlyGyro") then root.LuxFlyGyro:Destroy() end end
+			local hum = LocalPlayer.Character:FindFirstChild("Humanoid"); if hum then hum.PlatformStand = false end
 		end
 	end
 end)
