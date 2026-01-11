@@ -31,7 +31,7 @@ local Colors = {
 
 -- GUI
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "LuxHub_SlideAnim"
+ScreenGui.Name = "LuxHub_TPFix"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
@@ -87,7 +87,7 @@ Instance.new("UICorner", BarFill).CornerRadius = UDim.new(1, 0)
 local OpenBtn = Instance.new("ImageButton")
 OpenBtn.Name = "OpenButton"
 OpenBtn.Size = UDim2.new(0, 55, 0, 55)
-OpenBtn.Position = UDim2.new(0, 20, 0.15, 0) -- Lado Esquerdo
+OpenBtn.Position = UDim2.new(0, 20, 0.15, 0)
 OpenBtn.BackgroundColor3 = Colors.MainBG
 OpenBtn.Image = "rbxassetid://139243074283722"
 OpenBtn.Visible = false 
@@ -104,7 +104,6 @@ Glow.Size = UDim2.new(1.6, 0, 1.6, 0); Glow.Position = UDim2.new(-0.3, 0, -0.3, 
 -- ==========================================
 local MainFrame = Instance.new("Frame")
 MainFrame.Size = UDim2.new(0, 480, 0, 300)
--- Posição Inicial: Escondida lá em baixo da tela (Y = 1.5)
 MainFrame.Position = UDim2.new(0.5, -240, 1.5, 0) 
 MainFrame.BackgroundColor3 = Colors.MainBG
 MainFrame.Visible = false
@@ -113,9 +112,8 @@ MainFrame.Parent = ScreenGui
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 20)
 MakeDraggable(MainFrame)
 
--- LÓGICA DA ANIMAÇÃO (BAIXO <-> CIMA)
 local isOpen = false
-local isAnimating = false -- Impede spam de clique
+local isAnimating = false
 
 OpenBtn.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then isDraggingBtn = false end end)
 OpenBtn.InputChanged:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseMovement then isDraggingBtn = true end end)
@@ -125,31 +123,19 @@ OpenBtn.MouseButton1Click:Connect(function()
 	isAnimating = true
 
 	if isOpen then
-		-- FECHAR: Desce para baixo
-		-- Pega a posição X atual (caso tenha arrastado) e joga o Y lá pra baixo (1.5)
+		-- Fechar
 		local currentX = MainFrame.Position.X
 		local closePos = UDim2.new(currentX.Scale, currentX.Offset, 1.5, 0)
-		
 		local closeTween = TweenService:Create(MainFrame, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Position = closePos})
 		closeTween:Play()
-		
-		closeTween.Completed:Connect(function()
-			MainFrame.Visible = false
-			isAnimating = false
-		end)
+		closeTween.Completed:Connect(function() MainFrame.Visible = false; isAnimating = false end)
 	else
-		-- ABRIR: Sobe do baixo
+		-- Abrir
 		MainFrame.Visible = true
-		-- Reseta posição para o centro-baixo para garantir a animação bonita
 		MainFrame.Position = UDim2.new(0.5, -240, 1.5, 0) 
-		
-		-- Animação indo para o Centro (0.4)
 		local openTween = TweenService:Create(MainFrame, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Position = UDim2.new(0.5, -240, 0.4, -150)})
 		openTween:Play()
-		
-		openTween.Completed:Connect(function()
-			isAnimating = false
-		end)
+		openTween.Completed:Connect(function() isAnimating = false end)
 	end
 	isOpen = not isOpen
 end)
@@ -208,22 +194,43 @@ local function AddSpeed()
 	B.MouseButton1Click:Connect(function() s = not s; local colorInfo = TweenInfo.new(0.3); TweenService:Create(B, colorInfo, {BackgroundColor3 = s and Colors.ToggleOn or Colors.ToggleOff}):Play(); Settings.Speed = s end)
 end
 
+-- ==========================================
+-- TP FIXO & OTIMIZADO
+-- ==========================================
 local function AddTP()
 	local C = Instance.new("Frame"); C.Size = UDim2.new(1, -10, 0, 150); C.BackgroundTransparency = 1; C.Parent = MainPage
-	local List = Instance.new("ScrollingFrame"); List.Size = UDim2.new(1, -10, 1, -10); List.Position = UDim2.new(0, 5, 0, 5); List.BackgroundColor3 = Colors.ItemBG; List.Parent = C
-	Instance.new("UICorner", List).CornerRadius = UDim.new(0, 10); local LL = Instance.new("UIListLayout"); LL.Parent = List
+	
+	-- Lista com Scroll Automático
+	local List = Instance.new("ScrollingFrame"); 
+	List.Size = UDim2.new(1, 0, 1, 0); 
+	List.BackgroundColor3 = Colors.ItemBG; 
+	List.Parent = C
+	List.AutomaticCanvasSize = Enum.AutomaticSize.Y -- Importante: Ajusta scroll sozinho
+	List.CanvasSize = UDim2.new(0,0,0,0)
+	
+	Instance.new("UICorner", List).CornerRadius = UDim.new(0, 10)
+	local LL = Instance.new("UIListLayout"); LL.Padding = UDim.new(0, 2); LL.Parent = List
 
 	local function Refresh()
-		for _,v in pairs(List:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end
-		local TitleBtn = Instance.new("TextButton"); TitleBtn.Size = UDim2.new(1,0,0,25); TitleBtn.Text = "Click Name to Instant TP (Refresh)"; TitleBtn.TextColor3 = Colors.Accent; TitleBtn.BackgroundTransparency = 1; TitleBtn.Font = Enum.Font.GothamBold; TitleBtn.Parent = List
-		TitleBtn.MouseButton1Click:Connect(Refresh)
+		for _,v in pairs(List:GetChildren()) do if v:IsA("TextButton") or v:IsA("TextLabel") then v:Destroy() end end
+		
+		local Title = Instance.new("TextLabel")
+		Title.Size = UDim2.new(1,0,0,25); Title.Text = "Click Player to TP (Hover to Refresh)"; Title.TextColor3 = Colors.Accent; Title.BackgroundTransparency = 1; Title.Font = Enum.Font.GothamBold; Title.Parent = List
+		
 		for _,p in pairs(Players:GetPlayers()) do
 			if p ~= LocalPlayer then
-				local b = Instance.new("TextButton"); b.Size = UDim2.new(1,0,0,30); b.Text = p.Name; b.TextColor3 = Colors.Text; b.BackgroundColor3 = Colors.ItemBG; b.BorderSizePixel = 0; b.Parent = List
+				local b = Instance.new("TextButton"); b.Size = UDim2.new(1,0,0,35); b.Text = p.Name; b.TextColor3 = Colors.Text; b.BackgroundColor3 = Colors.ItemBG; b.BorderSizePixel = 0; b.Parent = List
+				
 				b.MouseButton1Click:Connect(function()
+					-- CORREÇÃO: Pega o personagem ATUAL na hora do clique
 					if p.Character and p.Character:FindFirstChild("HumanoidRootPart") and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-						LocalPlayer.Character.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame
+						-- Teleporta 3 studs acima para evitar ficar preso no chão
+						LocalPlayer.Character.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame * CFrame.new(0, 3, 2)
 						b.Text = "Teleported!"
+						task.wait(1)
+						b.Text = p.Name
+					else
+						b.Text = "Player not found/dead"
 						task.wait(1)
 						b.Text = p.Name
 					end
