@@ -36,7 +36,7 @@ local Colors = {
 
 -- GUI
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "LuxHub_v1.9_AdvancedStatus"
+ScreenGui.Name = "LuxHub_v1.9_Fixed"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
@@ -61,7 +61,7 @@ local function MakeDraggable(trigger, objectToMove)
 end
 
 -- ==========================================
--- EFEITOS E LOADING
+-- EFEITO BLUR (LOADING)
 -- ==========================================
 local LoadingBlur = Instance.new("BlurEffect"); LoadingBlur.Name = "LuxLoadingBlur"; LoadingBlur.Size = 0; LoadingBlur.Parent = Lighting
 TweenService:Create(LoadingBlur, TweenInfo.new(0.5), {Size = 24}):Play()
@@ -90,9 +90,6 @@ local Glow = Instance.new("ImageLabel"); Glow.BackgroundTransparency = 1; Glow.I
 local MainFrame = Instance.new("Frame"); MainFrame.Size = UDim2.new(0, 480, 0, 280); MainFrame.Position = UDim2.new(0.5, -240, 1.5, 0); MainFrame.BackgroundColor3 = Colors.MainBG; MainFrame.Visible = false; MainFrame.ClipsDescendants = true; MainFrame.Parent = ScreenGui
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 20)
 local MenuBlur = nil; local isOpen = false; local isAnimating = false
-
-OpenBtn.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then isDraggingBtn = false end end)
-OpenBtn.InputChanged:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseMovement then isDraggingBtn = true end end)
 
 OpenBtn.MouseButton1Click:Connect(function()
 	if isAnimating then return end; isAnimating = true
@@ -128,135 +125,93 @@ local function CreateTab(name, pageToShow)
 	local Btn = Instance.new("TextButton"); Btn.Size = UDim2.new(1, 0, 0, 35); Btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255); Btn.BackgroundTransparency = 0.9
 	Btn.Text = name; Btn.Font = Enum.Font.GothamBold; Btn.TextSize = 17; Btn.TextColor3 = Colors.Text; Btn.Parent = TabContainer; Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 8)
 	Btn.MouseButton1Click:Connect(function() 
-		MainPage.Visible = false
-		StatusPage.Visible = false
-		ServerPage.Visible = false
-		pageToShow.Visible = true 
+		MainPage.Visible = false; StatusPage.Visible = false; ServerPage.Visible = false; pageToShow.Visible = true 
 	end)
 end
-CreateTab("Main", MainPage)
-CreateTab("Status", StatusPage)
-CreateTab("Server", ServerPage)
+CreateTab("Main", MainPage); CreateTab("Status", StatusPage); CreateTab("Server", ServerPage)
 
 -- ==========================================
--- CONTEÚDO DA ABA STATUS (NOVA)
+-- CONTEÚDO STATUS
 -- ==========================================
 local StatsInfoContainer = Instance.new("Frame"); StatsInfoContainer.Size = UDim2.new(0.95, 0, 1, 0); StatsInfoContainer.Position = UDim2.new(0, 5, 0, 0); StatsInfoContainer.BackgroundTransparency = 1; StatsInfoContainer.Parent = StatusPage
-local StatsList = Instance.new("UIListLayout"); StatsList.Padding = UDim.new(0, 5); StatsList.SortOrder = Enum.SortOrder.LayoutOrder; StatsList.Parent = StatsInfoContainer
+local StatsList = Instance.new("UIListLayout"); StatsList.Padding = UDim.new(0, 5); StatsList.Parent = StatsInfoContainer
 
 local function CreateStatLabel(text)
-	local L = Instance.new("TextLabel"); L.Text = text; L.Font = Enum.Font.GothamBold; L.TextSize = 16; L.TextColor3 = Colors.Text; L.Size = UDim2.new(1, 0, 0, 25); L.BackgroundTransparency = 1; L.TextXAlignment = Enum.TextXAlignment.Left; L.Parent = StatsInfoContainer
-	return L
+	local L = Instance.new("TextLabel"); L.Text = text; L.Font = Enum.Font.GothamBold; L.TextSize = 16; L.TextColor3 = Colors.Text; L.Size = UDim2.new(1, 0, 0, 25); L.BackgroundTransparency = 1; L.TextXAlignment = Enum.TextXAlignment.Left; L.Parent = StatsInfoContainer; return L
 end
 
--- Detecção do Executor
-local executorName = identifyexecutor and identifyexecutor() or "Unknown"
-
--- Detecção da Região (Assíncrono)
+local executorName = (identifyexecutor and identifyexecutor()) or "Unknown"
 local regionName = "Detecting..."
-task.spawn(function()
-	pcall(function()
-		local res = HttpService:JSONDecode(game:HttpGet("http://ip-api.com/json/"))
-		regionName = res.countryCode .. " - " .. res.regionName
-	end)
-end)
+task.spawn(function() pcall(function() local res = HttpService:JSONDecode(game:HttpGet("http://ip-api.com/json/")); regionName = res.countryCode .. " - " .. res.regionName end) end)
 
--- Labels
 local PlayerLabel = CreateStatLabel("Player: " .. LocalPlayer.Name)
 local HealthLabel = CreateStatLabel("Health: --/--")
 local PosLabel = CreateStatLabel("Pos: 0, 0, 0")
 local PlayersLabel = CreateStatLabel("Online: 0/0")
-local RegionLabel = CreateStatLabel("Region: " .. regionName)
+local RegionLabel = CreateStatLabel("Region: Detecting...")
 local TimeLabel = CreateStatLabel("Time: 00:00:00")
 local ExecutorLabel = CreateStatLabel("Executor: " .. executorName)
 local FPSLabel = CreateStatLabel("FPS: 60")
 local PingLabel = CreateStatLabel("Ping: 0 ms")
 
--- Lógica de Atualizar Status
-RunService.RenderStepped:Connect(function()
-	if StatusPage.Visible then
-		-- 1. Date & Time (Real)
-		TimeLabel.Text = "Date: " .. os.date("%d/%m - %H:%M:%S")
-
-		-- 2. Region Update
-		RegionLabel.Text = "Region: " .. regionName
-
-		-- 3. Health
-		if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-			local hp = math.floor(LocalPlayer.Character.Humanoid.Health)
-			local max = math.floor(LocalPlayer.Character.Humanoid.MaxHealth)
-			HealthLabel.Text = "Health: " .. hp .. "/" .. max
-			HealthLabel.TextColor3 = hp < (max * 0.3) and Colors.Red or Colors.Text
-		else
-			HealthLabel.Text = "Health: N/A"
-		end
-
-		-- 4. Position
-		if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-			local pos = LocalPlayer.Character.HumanoidRootPart.Position
-			PosLabel.Text = string.format("Pos: %d, %d, %d", math.floor(pos.X), math.floor(pos.Y), math.floor(pos.Z))
-		end
-
-		-- 5. Players
-		PlayersLabel.Text = "Online: " .. #Players:GetPlayers() .. "/" .. Players.MaxPlayers
-
-		-- 6. FPS & Ping
-		local fps = math.floor(workspace:GetRealPhysicsFPS())
-		FPSLabel.Text = "FPS: " .. fps; FPSLabel.TextColor3 = fps > 45 and Colors.Green or (fps > 25 and Colors.Yellow or Colors.Red)
-		
-		local pingVal = Stats.Network.ServerStatsItem["Data Ping"]:GetValueString()
-		local ping = math.floor(pingVal:split(" ")[1])
-		PingLabel.Text = "Ping: " .. ping .. " ms"; PingLabel.TextColor3 = ping < 100 and Colors.Green or (ping < 200 and Colors.Yellow or Colors.Red)
-	end
-end)
-
 -- ==========================================
--- CONTEÚDO DA ABA SERVER
+-- CONTEÚDO SERVER
 -- ==========================================
 local Hop = Instance.new("TextButton"); Hop.Text = "Server Hop"; Hop.Font = Enum.Font.GothamBold; Hop.TextSize = 17
-Hop.Size = UDim2.new(0.95, 0, 0, 40); Hop.Position = UDim2.new(0, 5, 0, 10)
-Hop.BackgroundColor3 = Colors.ItemBG; Hop.TextColor3 = Colors.Text; Hop.Parent = ServerPage
+Hop.Size = UDim2.new(0.95, 0, 0, 40); Hop.Position = UDim2.new(0, 5, 0, 10); Hop.BackgroundColor3 = Colors.ItemBG; Hop.TextColor3 = Colors.Text; Hop.Parent = ServerPage
 Instance.new("UICorner", Hop).CornerRadius = UDim.new(0, 10)
 Hop.MouseButton1Click:Connect(function() local Servers = HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Asc&limit=100")); for _, s in pairs(Servers.data) do if s.playing ~= s.maxPlayers then TeleportService:TeleportToPlaceInstance(game.PlaceId, s.id, LocalPlayer) end end end)
 
-
 -- ==========================================
--- ITENS DA ABA MAIN
+-- ITENS ABA MAIN
 -- ==========================================
 local function AddToggle(text, callback)
 	local F = Instance.new("Frame"); F.Size = UDim2.new(1, -10, 0, 40); F.BackgroundColor3 = Colors.ItemBG; F.Parent = MainPage; Instance.new("UICorner", F).CornerRadius = UDim.new(0, 10)
 	local L = Instance.new("TextLabel"); L.Text = text; L.Font = Enum.Font.GothamBold; L.TextSize = 17; L.TextColor3 = Colors.Text; L.TextXAlignment = Enum.TextXAlignment.Left; L.Position = UDim2.new(0, 15, 0, 0); L.Size = UDim2.new(0.6, 0, 1, 0); L.BackgroundTransparency = 1; L.Parent = F
 	local B = Instance.new("TextButton"); B.Text = ""; B.Size = UDim2.new(0, 24, 0, 24); B.Position = UDim2.new(1, -35, 0.5, -12); B.BackgroundColor3 = Colors.ToggleOff; B.Parent = F; Instance.new("UICorner", B).CornerRadius = UDim.new(1, 0)
-	local s = false; B.MouseButton1Click:Connect(function() s = not s; local colorInfo = TweenInfo.new(0.3); TweenService:Create(B, colorInfo, {BackgroundColor3 = s and Colors.ToggleOn or Colors.ToggleOff}):Play(); callback(s) end)
-end
-
-local function AddSpeed()
-	local F = Instance.new("Frame"); F.Size = UDim2.new(1, -10, 0, 40); F.BackgroundColor3 = Colors.ItemBG; F.Parent = MainPage; Instance.new("UICorner", F).CornerRadius = UDim.new(0, 10)
-	local L = Instance.new("TextLabel"); L.Text = "Speed"; L.Font = Enum.Font.GothamBold; L.TextSize = 17; L.TextColor3 = Colors.Text; L.TextXAlignment = Enum.TextXAlignment.Left; L.Position = UDim2.new(0, 15, 0, 0); L.Size = UDim2.new(0.3, 0, 1, 0); L.BackgroundTransparency = 1; L.Parent = F
-	local I = Instance.new("TextBox"); I.Text = "100"; I.Size = UDim2.new(0, 60, 0, 24); I.Position = UDim2.new(0.6, 0, 0.5, -12); I.BackgroundColor3 = Colors.Sidebar; I.TextColor3 = Colors.TextSelected; I.Parent = F; Instance.new("UICorner", I).CornerRadius = UDim.new(0, 6)
-	I.FocusLost:Connect(function() Settings.SpeedVal = tonumber(I.Text) or 100 end)
-	local B = Instance.new("TextButton"); B.Text = ""; B.Size = UDim2.new(0, 24, 0, 24); B.Position = UDim2.new(1, -35, 0.5, -12); B.BackgroundColor3 = Colors.ToggleOff; B.Parent = F; Instance.new("UICorner", B).CornerRadius = UDim.new(1, 0)
-	local s = false; B.MouseButton1Click:Connect(function() s = not s; local colorInfo = TweenInfo.new(0.3); TweenService:Create(B, colorInfo, {BackgroundColor3 = s and Colors.ToggleOn or Colors.ToggleOff}):Play(); Settings.Speed = s; if not s and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then LocalPlayer.Character.Humanoid.WalkSpeed = 16 end end)
+	local s = false; B.MouseButton1Click:Connect(function() s = not s; TweenService:Create(B, TweenInfo.new(0.3), {BackgroundColor3 = s and Colors.ToggleOn or Colors.ToggleOff}):Play(); callback(s) end)
 end
 
 AddToggle("Esp", function(v) Settings.ESP = v end)
 AddToggle("No Clip", function(v) Settings.Noclip = v end)
-AddSpeed()
 AddToggle("Fly", function(v) Settings.Fly = v end)
 AddToggle("Invisible", function(v) Settings.Invisible = v; if LocalPlayer.Character then for _,p in pairs(LocalPlayer.Character:GetDescendants()) do if p:IsA("BasePart") or p:IsA("Decal") then p.Transparency = v and 1 or 0 end end end end)
 
--- Loading Finish
-local tw = TweenService:Create(BarFill, TweenInfo.new(3), {Size = UDim2.new(1, 0, 1, 0)}); tw:Play()
-tw.Completed:Connect(function() task.wait(0.5); local blurOff = TweenService:Create(LoadingBlur, TweenInfo.new(1), {Size = 0}); blurOff:Play()
-	blurOff.Completed:Connect(function() LoadingBlur:Destroy(); LoadingContainer:Destroy(); OpenBtn.Visible = true end)
+-- ==========================================
+-- LOOPS E LÓGICA FINAL
+-- ==========================================
+RunService.RenderStepped:Connect(function()
+	if StatusPage.Visible then
+		TimeLabel.Text = "Date: " .. os.date("%d/%m - %H:%M:%S")
+		RegionLabel.Text = "Region: " .. regionName
+		if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+			local hp = math.floor(LocalPlayer.Character.Humanoid.Health); local max = math.floor(LocalPlayer.Character.Humanoid.MaxHealth)
+			HealthLabel.Text = "Health: " .. hp .. "/" .. max; HealthLabel.TextColor3 = hp < (max * 0.3) and Colors.Red or Colors.Text
+		end
+		if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+			local pos = LocalPlayer.Character.HumanoidRootPart.Position; PosLabel.Text = string.format("Pos: %d, %d, %d", math.floor(pos.X), math.floor(pos.Y), math.floor(pos.Z))
+		end
+		PlayersLabel.Text = "Online: " .. #Players:GetPlayers() .. "/" .. Players.MaxPlayers
+		local fps = math.floor(workspace:GetRealPhysicsFPS()); FPSLabel.Text = "FPS: " .. fps; FPSLabel.TextColor3 = fps > 45 and Colors.Green or (fps > 25 and Colors.Yellow or Colors.Red)
+		local pingVal = Stats.Network.ServerStatsItem["Data Ping"]:GetValueString(); local ping = math.floor(pingVal:split(" ")[1]); PingLabel.Text = "Ping: " .. ping .. " ms"; PingLabel.TextColor3 = ping < 100 and Colors.Green or (ping < 200 and Colors.Yellow or Colors.Red)
+	end
+
+	if Settings.ESP then
+		for _, p in pairs(Players:GetPlayers()) do
+			if p ~= LocalPlayer and p.Character then
+				if not p.Character:FindFirstChild("LuxHighlight") then
+					local h = Instance.new("Highlight"); h.Name = "LuxHighlight"; h.FillColor = Color3.fromRGB(160, 80, 255); h.OutlineColor = Color3.new(1,1,1); h.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop; h.Parent = p.Character
+				end
+			end
+		end
+	else
+		for _, p in pairs(Players:GetPlayers()) do if p.Character and p.Character:FindFirstChild("LuxHighlight") then p.Character.LuxHighlight:Destroy() end end
+	end
 end)
 
--- Funções Loop
-RunService.RenderStepped:Connect(function() if Settings.ESP then for _, p in pairs(Players:GetPlayers()) do if p ~= LocalPlayer and p.Character then if not p.Character:FindFirstChild("LuxHighlight") then local h = Instance.new("Highlight"); h.Name = "LuxHighlight"; h.FillColor = Color3.fromRGB(160, 80, 255); h.OutlineColor = Color3.new(1,1,1); h.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop; h.Parent = p.Character end end end else for _, p in pairs(Players:GetPlayers()) do if p.Character and p.Character:FindFirstChild("LuxHighlight") then p.Character.LuxHighlight:Destroy() end end end end)
 RunService.Stepped:Connect(function() if (Settings.Noclip or Settings.Fly) and LocalPlayer.Character then for _,v in pairs(LocalPlayer.Character:GetDescendants()) do if v:IsA("BasePart") then v.CanCollide = false end end end end)
-RunService.Heartbeat:Connect(function() if Settings.Speed and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then LocalPlayer.Character.Humanoid.WalkSpeed = Settings.SpeedVal end end)
 
--- FLY UNIVERSAL
+-- LÓGICA FLY
 RunService.RenderStepped:Connect(function()
 	if Settings.Fly and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
 		local root = LocalPlayer.Character.HumanoidRootPart; local hum = LocalPlayer.Character.Humanoid
@@ -273,9 +228,18 @@ RunService.RenderStepped:Connect(function()
 		if UserInputService:IsKeyDown(Enum.KeyCode.Space) then moveDir = moveDir + Vector3.new(0, 1, 0) end
 		if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then moveDir = moveDir - Vector3.new(0, 1, 0) end
 		if moveDir.Magnitude == 0 and hum.MoveDirection.Magnitude > 0 then moveDir = Camera.CFrame.LookVector end
-		local flySpeed = Settings.Speed and Settings.SpeedVal or 50
-		bv.Velocity = moveDir * flySpeed; bg.CFrame = Camera.CFrame
+		bv.Velocity = moveDir * Settings.SpeedVal; bg.CFrame = Camera.CFrame
 	else
 		if LocalPlayer.Character then
 			local root = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-			if root then if root:FindFirstChild("LuxFlyVelocity") then root.LuxFlyVelocity:Destroy() end; if root:FindFirstChild("LuxFlyGyro") then root.LuxFlyGyro:Destroy() en
+			if root then if root:FindFirstChild("LuxFlyVelocity") then root.LuxFlyVelocity:Destroy() end; if root:FindFirstChild("LuxFlyGyro") then root.LuxFlyGyro:Destroy() end end
+			local hum = LocalPlayer.Character:FindFirstChild("Humanoid"); if hum then hum.PlatformStand = false end
+		end
+	end
+end)
+
+-- Loading Finish
+local tw = TweenService:Create(BarFill, TweenInfo.new(3), {Size = UDim2.new(1, 0, 1, 0)}); tw:Play()
+tw.Completed:Connect(function() task.wait(0.5); local blurOff = TweenService:Create(LoadingBlur, TweenInfo.new(1), {Size = 0}); blurOff:Play()
+	blurOff.Completed:Connect(function() LoadingBlur:Destroy(); LoadingContainer:Destroy(); OpenBtn.Visible = true end)
+end)
