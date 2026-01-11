@@ -32,7 +32,7 @@ local Colors = {
 
 -- GUI
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "LuxHub_VideoAnim"
+ScreenGui.Name = "LuxHub_WindowBlur"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
@@ -58,12 +58,13 @@ local function MakeDraggable(gui)
 end
 
 -- ==========================================
--- EFEITO BLUR
+-- EFEITO BLUR (LOADING)
 -- ==========================================
-local BlurEffect = Instance.new("BlurEffect")
-BlurEffect.Size = 0
-BlurEffect.Parent = Lighting
-TweenService:Create(BlurEffect, TweenInfo.new(0.5), {Size = 24}):Play()
+local LoadingBlur = Instance.new("BlurEffect")
+LoadingBlur.Name = "LuxLoadingBlur"
+LoadingBlur.Size = 0
+LoadingBlur.Parent = Lighting
+TweenService:Create(LoadingBlur, TweenInfo.new(0.5), {Size = 24}):Play()
 
 -- ==========================================
 -- TELA DE LOADING
@@ -111,26 +112,48 @@ local MainFrame = Instance.new("Frame")
 MainFrame.Size = UDim2.new(0, 480, 0, 280); MainFrame.Position = UDim2.new(0.5, -240, 1.5, 0); MainFrame.BackgroundColor3 = Colors.MainBG; MainFrame.Visible = false; MainFrame.ClipsDescendants = true; MainFrame.Parent = ScreenGui
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 20); MakeDraggable(MainFrame)
 
+-- VARIÁVEL PARA O BLUR DO MENU
+local MenuBlur = nil
+
 local isOpen = false; local isAnimating = false
 OpenBtn.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then isDraggingBtn = false end end)
 OpenBtn.InputChanged:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseMovement then isDraggingBtn = true end end)
 
--- ==========================================
--- ANIMAÇÃO DE SLIDE (IGUAL AO VÍDEO)
--- ==========================================
 OpenBtn.MouseButton1Click:Connect(function()
 	if isAnimating then return end; isAnimating = true
 	
 	if isOpen then
-		-- FECHAR (Desliza para baixo suavemente)
+		-- FECHAR JANELA E REMOVER BLUR
+		
+		-- Animação do Blur (Saindo)
+		if MenuBlur then
+			local blurOut = TweenService:Create(MenuBlur, TweenInfo.new(0.5), {Size = 0})
+			blurOut:Play()
+			blurOut.Completed:Connect(function()
+				if MenuBlur then MenuBlur:Destroy(); MenuBlur = nil end
+			end)
+		end
+
+		-- Animação da Janela (Descendo)
 		local closePos = UDim2.new(MainFrame.Position.X.Scale, MainFrame.Position.X.Offset, 1.5, 0)
-		-- Mudei para Quart + In para sair acelerando suave
 		local closeTween = TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {Position = closePos})
 		closeTween:Play(); closeTween.Completed:Connect(function() MainFrame.Visible = false; isAnimating = false end)
 	else
-		-- ABRIR (Desliza de baixo para cima suavemente)
+		-- ABRIR JANELA E ADICIONAR BLUR
+		
+		-- Cria o Blur se não existir
+		if not MenuBlur then
+			MenuBlur = Instance.new("BlurEffect")
+			MenuBlur.Name = "LuxMenuBlur"
+			MenuBlur.Size = 0
+			MenuBlur.Parent = Lighting
+		end
+		
+		-- Animação do Blur (Entrando)
+		TweenService:Create(MenuBlur, TweenInfo.new(0.5), {Size = 24}):Play()
+
+		-- Animação da Janela (Subindo)
 		MainFrame.Visible = true; MainFrame.Position = UDim2.new(0.5, -240, 1.5, 0) 
-		-- Mudei para Quart + Out para frear suavemente no final
 		local openTween = TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2.new(0.5, -240, 0.4, -150)})
 		openTween:Play(); openTween.Completed:Connect(function() isAnimating = false end)
 	end
@@ -141,7 +164,7 @@ end)
 local Sidebar = Instance.new("Frame"); Sidebar.Size = UDim2.new(0, 140, 1, 0); Sidebar.BackgroundColor3 = Colors.Sidebar; Sidebar.Parent = MainFrame; Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 20)
 local Fix = Instance.new("Frame"); Fix.Size = UDim2.new(0,15,1,0); Fix.Position = UDim2.new(1,-15,0,0); Fix.BackgroundColor3 = Colors.Sidebar; Fix.BorderSizePixel=0; Fix.Parent=Sidebar
 local Title = Instance.new("TextLabel"); Title.Text = "Lux Hub"; Title.Font = Enum.Font.GothamBold; Title.TextSize = 24; Title.TextColor3 = Colors.TextSelected; Title.Size = UDim2.new(1, 0, 0, 30); Title.Position = UDim2.new(0, 0, 0, 20); Title.BackgroundTransparency = 1; Title.TextXAlignment = Enum.TextXAlignment.Center; Title.Parent = Sidebar
-local SubVer = Instance.new("TextLabel"); SubVer.Text = "V2.6"; SubVer.Font = Enum.Font.Gotham; SubVer.TextSize = 14; SubVer.TextColor3 = Color3.fromRGB(180,180,180); SubVer.Size = UDim2.new(1, 0, 0, 20); SubVer.Position = UDim2.new(0, 0, 0, 45); SubVer.BackgroundTransparency = 1; SubVer.TextXAlignment = Enum.TextXAlignment.Center; SubVer.Parent = Sidebar
+local SubVer = Instance.new("TextLabel"); SubVer.Text = "V2.7"; SubVer.Font = Enum.Font.Gotham; SubVer.TextSize = 14; SubVer.TextColor3 = Color3.fromRGB(180,180,180); SubVer.Size = UDim2.new(1, 0, 0, 20); SubVer.Position = UDim2.new(0, 0, 0, 45); SubVer.BackgroundTransparency = 1; SubVer.TextXAlignment = Enum.TextXAlignment.Center; SubVer.Parent = Sidebar
 
 -- Containers & Tabs
 local PageContainer = Instance.new("Frame"); PageContainer.Size = UDim2.new(1, -150, 1, -20); PageContainer.Position = UDim2.new(0, 150, 0, 10); PageContainer.BackgroundTransparency = 1; PageContainer.Parent = MainFrame
@@ -183,8 +206,8 @@ AddToggle("Invisible", function(v) Settings.Invisible = v; if LocalPlayer.Charac
 -- ANIMATION LOOP
 -- ==========================================
 local tw = TweenService:Create(BarFill, TweenInfo.new(3), {Size = UDim2.new(1, 0, 1, 0)}); tw:Play()
-tw.Completed:Connect(function() task.wait(0.5); local blurOff = TweenService:Create(BlurEffect, TweenInfo.new(1), {Size = 0}); blurOff:Play()
-	blurOff.Completed:Connect(function() BlurEffect:Destroy(); LoadingContainer:Destroy(); OpenBtn.Visible = true end)
+tw.Completed:Connect(function() task.wait(0.5); local blurOff = TweenService:Create(LoadingBlur, TweenInfo.new(1), {Size = 0}); blurOff:Play()
+	blurOff.Completed:Connect(function() LoadingBlur:Destroy(); LoadingContainer:Destroy(); OpenBtn.Visible = true end)
 end)
 
 -- Funções Loop
@@ -192,7 +215,7 @@ RunService.RenderStepped:Connect(function() if Settings.ESP then for _, p in pai
 RunService.Stepped:Connect(function() if Settings.Noclip and LocalPlayer.Character then for _,v in pairs(LocalPlayer.Character:GetDescendants()) do if v:IsA("BasePart") then v.CanCollide = false end end end end)
 RunService.Heartbeat:Connect(function() if Settings.Speed and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then LocalPlayer.Character.Humanoid.WalkSpeed = Settings.SpeedVal end end)
 
--- FLY CORRIGIDO (V2.5)
+-- FLY V2.5
 RunService.RenderStepped:Connect(function()
 	if Settings.Fly and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
 		local root = LocalPlayer.Character.HumanoidRootPart
