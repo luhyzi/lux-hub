@@ -4,6 +4,7 @@ local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local TeleportService = game:GetService("TeleportService")
 local HttpService = game:GetService("HttpService")
+local Lighting = game:GetService("Lighting") -- Serviço de Iluminação para o Blur
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 
@@ -31,7 +32,7 @@ local Colors = {
 
 -- GUI
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "LuxHub_SpeedFix"
+ScreenGui.Name = "LuxHub_BlurLoading"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
@@ -56,28 +57,45 @@ local function MakeDraggable(gui)
 	UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
 end
 
--- LOADING SCREEN
+-- ==========================================
+-- EFEITO BLUR (DESFOQUE)
+-- ==========================================
+local BlurEffect = Instance.new("BlurEffect")
+BlurEffect.Size = 0 -- Começa em 0 e aumenta
+BlurEffect.Parent = Lighting
+
+-- Animação de entrada do Blur
+TweenService:Create(BlurEffect, TweenInfo.new(0.5), {Size = 24}):Play()
+
+-- LOADING SCREEN (SEM FUNDO, APENAS ELEMENTOS)
 local LoadingFrame = Instance.new("Frame")
-LoadingFrame.Size = UDim2.new(0, 350, 0, 220)
-LoadingFrame.Position = UDim2.new(0.5, -175, 0.5, -110)
-LoadingFrame.BackgroundColor3 = Colors.MainBG
+LoadingFrame.Size = UDim2.new(1, 0, 1, 0) -- Ocupa tela toda para centralizar
+LoadingFrame.Position = UDim2.new(0, 0, 0, 0)
+LoadingFrame.BackgroundTransparency = 1 -- TOTALMENTE TRANSPARENTE
 LoadingFrame.Parent = ScreenGui
-Instance.new("UICorner", LoadingFrame).CornerRadius = UDim.new(0, 20)
 
 local LoadTitle = Instance.new("TextLabel")
 LoadTitle.Text = "Loading..."
-LoadTitle.Font = Enum.Font.GothamBold; LoadTitle.TextSize = 24
+LoadTitle.Font = Enum.Font.GothamBold; LoadTitle.TextSize = 32 -- Texto um pouco maior
 LoadTitle.TextColor3 = Colors.TextSelected
-LoadTitle.Size = UDim2.new(1, 0, 0, 50); LoadTitle.Position = UDim2.new(0, 0, 0.2, 0)
+LoadTitle.Size = UDim2.new(0, 200, 0, 50)
+LoadTitle.Position = UDim2.new(0.5, -100, 0.45, -25) -- Centralizado
 LoadTitle.BackgroundTransparency = 1; LoadTitle.Parent = LoadingFrame
 
+-- Barra de Fundo
 local BarBG = Instance.new("Frame")
-BarBG.Size = UDim2.new(0.8, 0, 0, 10); BarBG.Position = UDim2.new(0.1, 0, 0.6, 0)
-BarBG.BackgroundColor3 = Color3.fromRGB(30, 15, 60); BarBG.Parent = LoadingFrame
+BarBG.Size = UDim2.new(0, 300, 0, 10) -- Barra mais larga
+BarBG.Position = UDim2.new(0.5, -150, 0.55, 0)
+BarBG.BackgroundColor3 = Color3.fromRGB(40, 20, 70)
+BarBG.BorderSizePixel = 0
+BarBG.Parent = LoadingFrame
 Instance.new("UICorner", BarBG).CornerRadius = UDim.new(1, 0)
 
+-- Barra de Preenchimento
 local BarFill = Instance.new("Frame")
-BarFill.Size = UDim2.new(0, 0, 1, 0); BarFill.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+BarFill.Size = UDim2.new(0, 0, 1, 0)
+BarFill.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+BarFill.BorderSizePixel = 0
 BarFill.Parent = BarBG
 Instance.new("UICorner", BarFill).CornerRadius = UDim.new(1, 0)
 
@@ -100,7 +118,7 @@ Glow.BackgroundTransparency = 1; Glow.Image = "rbxassetid://50288246"
 Glow.Size = UDim2.new(1.6, 0, 1.6, 0); Glow.Position = UDim2.new(-0.3, 0, -0.3, 0); Glow.Parent = OpenBtn
 
 -- ==========================================
--- JANELA PRINCIPAL
+-- JANELA PRINCIPAL (SLIDE ANIMATION)
 -- ==========================================
 local MainFrame = Instance.new("Frame")
 MainFrame.Size = UDim2.new(0, 480, 0, 280)
@@ -148,7 +166,7 @@ local Fix = Instance.new("Frame"); Fix.Size = UDim2.new(0,15,1,0); Fix.Position 
 local Title = Instance.new("TextLabel"); Title.Text = "Lux Hub"; Title.Font = Enum.Font.GothamBold; Title.TextSize = 22; Title.TextColor3 = Colors.TextSelected
 Title.Size = UDim2.new(1, 0, 0, 30); Title.Position = UDim2.new(0, 0, 0, 20); Title.BackgroundTransparency = 1; Title.TextXAlignment = Enum.TextXAlignment.Center; Title.Parent = Sidebar
 
-local SubVer = Instance.new("TextLabel"); SubVer.Text = "V1.6"; SubVer.Font = Enum.Font.Gotham; SubVer.TextSize = 12; SubVer.TextColor3 = Color3.fromRGB(180,180,180)
+local SubVer = Instance.new("TextLabel"); SubVer.Text = "V1.7"; SubVer.Font = Enum.Font.Gotham; SubVer.TextSize = 12; SubVer.TextColor3 = Color3.fromRGB(180,180,180)
 SubVer.Size = UDim2.new(1, 0, 0, 20); SubVer.Position = UDim2.new(0, 0, 0, 45); SubVer.BackgroundTransparency = 1; SubVer.TextXAlignment = Enum.TextXAlignment.Center; SubVer.Parent = Sidebar
 
 -- Containers
@@ -181,7 +199,7 @@ local function AddToggle(text, callback)
 	B.MouseButton1Click:Connect(function() s = not s; local colorInfo = TweenInfo.new(0.3); TweenService:Create(B, colorInfo, {BackgroundColor3 = s and Colors.ToggleOn or Colors.ToggleOff}):Play(); callback(s) end)
 end
 
--- SPEED COM CORREÇÃO
+-- SPEED
 local function AddSpeed()
 	local F = Instance.new("Frame"); F.Size = UDim2.new(1, -10, 0, 40); F.BackgroundColor3 = Colors.ItemBG; F.Parent = MainPage
 	Instance.new("UICorner", F).CornerRadius = UDim.new(0, 10)
@@ -197,7 +215,6 @@ local function AddSpeed()
 		local colorInfo = TweenInfo.new(0.3)
 		TweenService:Create(B, colorInfo, {BackgroundColor3 = s and Colors.ToggleOn or Colors.ToggleOff}):Play()
 		Settings.Speed = s
-		-- FIX: SE DESATIVAR, VOLTA A VELOCIDADE PADRÃO (16)
 		if not s and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
 			LocalPlayer.Character.Humanoid.WalkSpeed = 16
 		end
@@ -214,9 +231,26 @@ AddSpeed()
 AddToggle("Fly", function(v) Settings.Fly = v end)
 AddToggle("Invisible", function(v) Settings.Invisible = v; if LocalPlayer.Character then for _,p in pairs(LocalPlayer.Character:GetDescendants()) do if p:IsA("BasePart") or p:IsA("Decal") then p.Transparency = v and 1 or 0 end end end end)
 
--- Loops
-local tw = TweenService:Create(BarFill, TweenInfo.new(3), {Size = UDim2.new(1, 0, 1, 0)}); tw:Play()
-tw.Completed:Connect(function() task.wait(0.5); LoadingFrame:Destroy(); OpenBtn.Visible = true end)
+-- ==========================================
+-- LOOP DE LOADING COM BLUR
+-- ==========================================
+local tw = TweenService:Create(BarFill, TweenInfo.new(3), {Size = UDim2.new(1, 0, 1, 0)})
+tw:Play()
+tw.Completed:Connect(function()
+	task.wait(0.5)
+	
+	-- Remove o Blur Suavemente
+	local blurOff = TweenService:Create(BlurEffect, TweenInfo.new(1), {Size = 0})
+	blurOff:Play()
+	
+	blurOff.Completed:Connect(function()
+		BlurEffect:Destroy() -- Deleta o blur da iluminação
+		LoadingFrame:Destroy() -- Deleta a GUI de loading
+		OpenBtn.Visible = true -- Mostra o botão do script
+	end)
+end)
+
+-- Funções Loop
 RunService.RenderStepped:Connect(function() if Settings.ESP then for _, p in pairs(Players:GetPlayers()) do if p ~= LocalPlayer and p.Character then if not p.Character:FindFirstChild("LuxHighlight") then local h = Instance.new("Highlight"); h.Name = "LuxHighlight"; h.FillColor = Color3.fromRGB(160, 80, 255); h.OutlineColor = Color3.new(1,1,1); h.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop; h.Parent = p.Character end end end else for _, p in pairs(Players:GetPlayers()) do if p.Character and p.Character:FindFirstChild("LuxHighlight") then p.Character.LuxHighlight:Destroy() end end end end)
 RunService.Stepped:Connect(function() if Settings.Noclip and LocalPlayer.Character then for _,v in pairs(LocalPlayer.Character:GetDescendants()) do if v:IsA("BasePart") then v.CanCollide = false end end end end)
 RunService.Heartbeat:Connect(function() if Settings.Speed and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then LocalPlayer.Character.Humanoid.WalkSpeed = Settings.SpeedVal end end)
