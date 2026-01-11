@@ -32,10 +32,38 @@ local Colors = {
 
 -- GUI
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "LuxHub_PositionFix"
+ScreenGui.Name = "LuxHub_DraggableBtn"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+-- FUNÇÃO GLOBAL DE ARRASTAR (DRAGGABLE)
+local function MakeDraggable(gui)
+	local dragging, dragInput, dragStart, startPos
+	gui.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = true
+			dragStart = input.Position
+			startPos = gui.Position
+		end
+	end)
+	gui.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement then
+			dragInput = input
+		end
+	end)
+	UserInputService.InputChanged:Connect(function(input)
+		if input == dragInput and dragging then
+			local delta = input.Position - dragStart
+			gui.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+		end
+	end)
+	UserInputService.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = false
+		end
+	end)
+end
 
 -- LOADING SCREEN
 local LoadingFrame = Instance.new("Frame")
@@ -63,54 +91,51 @@ BarFill.Parent = BarBG
 Instance.new("UICorner", BarFill).CornerRadius = UDim.new(1, 0)
 
 -- ==========================================
--- BOTÃO REDONDO (POSIÇÃO AJUSTADA)
+-- BOTÃO REDONDO (DIREITA & ARRASTÁVEL)
 -- ==========================================
 local OpenBtn = Instance.new("ImageButton")
 OpenBtn.Name = "OpenButton"
 OpenBtn.Size = UDim2.new(0, 55, 0, 55)
--- MUDANÇA AQUI: Deixei mais pra cima (0.01 em vez de 0.05)
-OpenBtn.Position = UDim2.new(0.5, -27, 0.01, 0) 
+-- POSIÇÃO: Lado Direito Superior
+OpenBtn.Position = UDim2.new(1, -80, 0.15, 0) 
 OpenBtn.BackgroundColor3 = Colors.MainBG
 OpenBtn.Image = "rbxassetid://139243074283722"
 OpenBtn.Visible = false 
 OpenBtn.Parent = ScreenGui
 Instance.new("UICorner", OpenBtn).CornerRadius = UDim.new(1, 0)
+MakeDraggable(OpenBtn) -- AGORA É ARRASTÁVEL!
 
 local Glow = Instance.new("ImageLabel")
 Glow.BackgroundTransparency = 1; Glow.Image = "rbxassetid://50288246"
 Glow.Size = UDim2.new(1.6, 0, 1.6, 0); Glow.Position = UDim2.new(-0.3, 0, -0.3, 0); Glow.Parent = OpenBtn
 
 -- ==========================================
--- JANELA PRINCIPAL (POSIÇÃO AJUSTADA)
+-- JANELA PRINCIPAL
 -- ==========================================
 local MainFrame = Instance.new("Frame")
 MainFrame.Size = UDim2.new(0, 480, 0, 300)
--- MUDANÇA AQUI: Deixei mais pra cima (Y = 0.4 em vez de 0.5)
 MainFrame.Position = UDim2.new(0.5, -240, 0.4, -150) 
 MainFrame.BackgroundColor3 = Colors.MainBG
 MainFrame.Visible = false
 MainFrame.ClipsDescendants = true
 MainFrame.Parent = ScreenGui
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 20)
-
--- Arrastar
-local dragging, dragStart, startPos
-MainFrame.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 then
-		dragging = true; dragStart = input.Position; startPos = MainFrame.Position
-	end
-end)
-UserInputService.InputChanged:Connect(function(input)
-	if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-		local delta = input.Position - dragStart
-		MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-	end
-end)
-UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
+MakeDraggable(MainFrame) -- JANELA TAMBÉM É ARRASTÁVEL
 
 -- Animação Abrir/Fechar
 local isOpen = false
+local isDraggingBtn = false -- Verifica se está arrastando para não abrir ao soltar
+
+OpenBtn.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then isDraggingBtn = false end
+end)
+OpenBtn.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement then isDraggingBtn = true end
+end)
+
 OpenBtn.MouseButton1Click:Connect(function()
+	-- Pequena lógica para evitar abrir se você estiver só arrastando o botão
+	-- Mas o MakeDraggable já consome o input, então o Click deve funcionar bem
 	if isOpen then
 		local closeTween = TweenService:Create(MainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 0), BackgroundTransparency = 1})
 		closeTween:Play()
@@ -119,15 +144,10 @@ OpenBtn.MouseButton1Click:Connect(function()
 		MainFrame.Visible = true
 		MainFrame.Size = UDim2.new(0, 0, 0, 0)
 		MainFrame.BackgroundTransparency = 0
-		-- Ajustado para crescer a partir da nova posição (mais acima)
 		MainFrame.Position = UDim2.new(0.5, 0, 0.4, 0) 
-		
 		local openTweenSize = TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {Size = UDim2.new(0, 480, 0, 300)})
-		-- Destino da animação também ajustado para Y = 0.4
 		local openTweenPos = TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {Position = UDim2.new(0.5, -240, 0.4, -150)})
-		
-		openTweenSize:Play()
-		openTweenPos:Play()
+		openTweenSize:Play(); openTweenPos:Play()
 	end
 	isOpen = not isOpen
 end)
