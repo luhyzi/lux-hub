@@ -148,7 +148,7 @@ local Fix = Instance.new("Frame"); Fix.Size = UDim2.new(0,15,1,0); Fix.Position 
 local Title = Instance.new("TextLabel"); Title.Text = "Lux Hub"; Title.Font = Enum.Font.GothamBold; Title.TextSize = 22; Title.TextColor3 = Colors.TextSelected
 Title.Size = UDim2.new(1, 0, 0, 30); Title.Position = UDim2.new(0, 0, 0, 20); Title.BackgroundTransparency = 1; Title.TextXAlignment = Enum.TextXAlignment.Center; Title.Parent = Sidebar
 
-local SubVer = Instance.new("TextLabel"); SubVer.Text = "V1.0"; SubVer.Font = Enum.Font.Gotham; SubVer.TextSize = 12; SubVer.TextColor3 = Color3.fromRGB(180,180,180)
+local SubVer = Instance.new("TextLabel"); SubVer.Text = "V1.6"; SubVer.Font = Enum.Font.Gotham; SubVer.TextSize = 12; SubVer.TextColor3 = Color3.fromRGB(180,180,180)
 SubVer.Size = UDim2.new(1, 0, 0, 20); SubVer.Position = UDim2.new(0, 0, 0, 45); SubVer.BackgroundTransparency = 1; SubVer.TextXAlignment = Enum.TextXAlignment.Center; SubVer.Parent = Sidebar
 
 -- Containers
