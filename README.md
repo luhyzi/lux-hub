@@ -32,29 +32,44 @@ local Colors = {
 
 -- GUI
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "LuxHub_WindowBlur"
+ScreenGui.Name = "LuxHub_TitleDrag"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
--- FUNÇÃO ARRASTAR
-local function MakeDraggable(gui)
+-- FUNÇÃO ARRASTAR (ATUALIZADA)
+-- trigger: Onde você clica para arrastar (Ex: Barra Lateral)
+-- objectToMove: O que realmente se move (Ex: A Janela Inteira)
+local function MakeDraggable(trigger, objectToMove)
+	objectToMove = objectToMove or trigger -- Se não definir o que move, move o próprio gatilho
 	local dragging, dragInput, dragStart, startPos
-	gui.InputBegan:Connect(function(input)
+	
+	trigger.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
-			dragging = true; dragStart = input.Position; startPos = gui.Position
+			dragging = true
+			dragStart = input.Position
+			startPos = objectToMove.Position
 		end
 	end)
-	gui.InputChanged:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseMovement then dragInput = input end
+	
+	trigger.InputChanged:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement then
+			dragInput = input
+		end
 	end)
+	
 	UserInputService.InputChanged:Connect(function(input)
 		if input == dragInput and dragging then
 			local delta = input.Position - dragStart
-			gui.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+			objectToMove.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
 		end
 	end)
-	UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
+	
+	UserInputService.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 then
+			dragging = false
+		end
+	end)
 end
 
 -- ==========================================
@@ -99,7 +114,7 @@ OpenBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 OpenBtn.Visible = false 
 OpenBtn.Parent = ScreenGui
 Instance.new("UICorner", OpenBtn).CornerRadius = UDim.new(1, 0)
-MakeDraggable(OpenBtn)
+MakeDraggable(OpenBtn) -- O botão arrasta ele mesmo
 
 local Glow = Instance.new("ImageLabel")
 Glow.BackgroundTransparency = 1; Glow.Image = "rbxassetid://50288246"
@@ -109,8 +124,14 @@ Glow.Size = UDim2.new(1.6, 0, 1.6, 0); Glow.Position = UDim2.new(-0.3, 0, -0.3, 
 -- JANELA PRINCIPAL
 -- ==========================================
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 480, 0, 280); MainFrame.Position = UDim2.new(0.5, -240, 1.5, 0); MainFrame.BackgroundColor3 = Colors.MainBG; MainFrame.Visible = false; MainFrame.ClipsDescendants = true; MainFrame.Parent = ScreenGui
-Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 20); MakeDraggable(MainFrame)
+MainFrame.Size = UDim2.new(0, 480, 0, 280)
+MainFrame.Position = UDim2.new(0.5, -240, 1.5, 0)
+MainFrame.BackgroundColor3 = Colors.MainBG
+MainFrame.Visible = false
+MainFrame.ClipsDescendants = true
+MainFrame.Parent = ScreenGui
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 20)
+-- IMPORTANTE: Não chamamos MakeDraggable(MainFrame) aqui, pois queremos arrastar só pela Sidebar
 
 -- VARIÁVEL PARA O BLUR DO MENU
 local MenuBlur = nil
@@ -123,36 +144,19 @@ OpenBtn.MouseButton1Click:Connect(function()
 	if isAnimating then return end; isAnimating = true
 	
 	if isOpen then
-		-- FECHAR JANELA E REMOVER BLUR
-		
-		-- Animação do Blur (Saindo)
+		-- FECHAR
 		if MenuBlur then
 			local blurOut = TweenService:Create(MenuBlur, TweenInfo.new(0.5), {Size = 0})
-			blurOut:Play()
-			blurOut.Completed:Connect(function()
-				if MenuBlur then MenuBlur:Destroy(); MenuBlur = nil end
-			end)
+			blurOut:Play(); blurOut.Completed:Connect(function() if MenuBlur then MenuBlur:Destroy(); MenuBlur = nil end end)
 		end
-
-		-- Animação da Janela (Descendo)
 		local closePos = UDim2.new(MainFrame.Position.X.Scale, MainFrame.Position.X.Offset, 1.5, 0)
 		local closeTween = TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.In), {Position = closePos})
 		closeTween:Play(); closeTween.Completed:Connect(function() MainFrame.Visible = false; isAnimating = false end)
 	else
-		-- ABRIR JANELA E ADICIONAR BLUR
-		
-		-- Cria o Blur se não existir
-		if not MenuBlur then
-			MenuBlur = Instance.new("BlurEffect")
-			MenuBlur.Name = "LuxMenuBlur"
-			MenuBlur.Size = 0
-			MenuBlur.Parent = Lighting
-		end
-		
-		-- Animação do Blur (Entrando)
+		-- ABRIR
+		if not MenuBlur then MenuBlur = Instance.new("BlurEffect"); MenuBlur.Name = "LuxMenuBlur"; MenuBlur.Size = 0; MenuBlur.Parent = Lighting end
 		TweenService:Create(MenuBlur, TweenInfo.new(0.5), {Size = 24}):Play()
 
-		-- Animação da Janela (Subindo)
 		MainFrame.Visible = true; MainFrame.Position = UDim2.new(0.5, -240, 1.5, 0) 
 		local openTween = TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Position = UDim2.new(0.5, -240, 0.4, -150)})
 		openTween:Play(); openTween.Completed:Connect(function() isAnimating = false end)
@@ -161,10 +165,18 @@ OpenBtn.MouseButton1Click:Connect(function()
 end)
 
 -- Sidebar & Title
-local Sidebar = Instance.new("Frame"); Sidebar.Size = UDim2.new(0, 140, 1, 0); Sidebar.BackgroundColor3 = Colors.Sidebar; Sidebar.Parent = MainFrame; Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 20)
+local Sidebar = Instance.new("Frame")
+Sidebar.Size = UDim2.new(0, 140, 1, 0)
+Sidebar.BackgroundColor3 = Colors.Sidebar
+Sidebar.Parent = MainFrame
+Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 20)
+
+-- AQUI ESTÁ A MÁGICA: Tornamos a Sidebar o gatilho para mover o MainFrame
+MakeDraggable(Sidebar, MainFrame)
+
 local Fix = Instance.new("Frame"); Fix.Size = UDim2.new(0,15,1,0); Fix.Position = UDim2.new(1,-15,0,0); Fix.BackgroundColor3 = Colors.Sidebar; Fix.BorderSizePixel=0; Fix.Parent=Sidebar
 local Title = Instance.new("TextLabel"); Title.Text = "Lux Hub"; Title.Font = Enum.Font.GothamBold; Title.TextSize = 24; Title.TextColor3 = Colors.TextSelected; Title.Size = UDim2.new(1, 0, 0, 30); Title.Position = UDim2.new(0, 0, 0, 20); Title.BackgroundTransparency = 1; Title.TextXAlignment = Enum.TextXAlignment.Center; Title.Parent = Sidebar
-local SubVer = Instance.new("TextLabel"); SubVer.Text = "V2.7"; SubVer.Font = Enum.Font.Gotham; SubVer.TextSize = 14; SubVer.TextColor3 = Color3.fromRGB(180,180,180); SubVer.Size = UDim2.new(1, 0, 0, 20); SubVer.Position = UDim2.new(0, 0, 0, 45); SubVer.BackgroundTransparency = 1; SubVer.TextXAlignment = Enum.TextXAlignment.Center; SubVer.Parent = Sidebar
+local SubVer = Instance.new("TextLabel"); SubVer.Text = "V2.8"; SubVer.Font = Enum.Font.Gotham; SubVer.TextSize = 14; SubVer.TextColor3 = Color3.fromRGB(180,180,180); SubVer.Size = UDim2.new(1, 0, 0, 20); SubVer.Position = UDim2.new(0, 0, 0, 45); SubVer.BackgroundTransparency = 1; SubVer.TextXAlignment = Enum.TextXAlignment.Center; SubVer.Parent = Sidebar
 
 -- Containers & Tabs
 local PageContainer = Instance.new("Frame"); PageContainer.Size = UDim2.new(1, -150, 1, -20); PageContainer.Position = UDim2.new(0, 150, 0, 10); PageContainer.BackgroundTransparency = 1; PageContainer.Parent = MainFrame
