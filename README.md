@@ -32,7 +32,7 @@ local Colors = {
 
 -- GUI
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "LuxHub_BigText"
+ScreenGui.Name = "LuxHub_Size17"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
@@ -133,7 +133,7 @@ end)
 local Sidebar = Instance.new("Frame"); Sidebar.Size = UDim2.new(0, 140, 1, 0); Sidebar.BackgroundColor3 = Colors.Sidebar; Sidebar.Parent = MainFrame; Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 20)
 local Fix = Instance.new("Frame"); Fix.Size = UDim2.new(0,15,1,0); Fix.Position = UDim2.new(1,-15,0,0); Fix.BackgroundColor3 = Colors.Sidebar; Fix.BorderSizePixel=0; Fix.Parent=Sidebar
 local Title = Instance.new("TextLabel"); Title.Text = "Lux Hub"; Title.Font = Enum.Font.GothamBold; Title.TextSize = 24; Title.TextColor3 = Colors.TextSelected; Title.Size = UDim2.new(1, 0, 0, 30); Title.Position = UDim2.new(0, 0, 0, 20); Title.BackgroundTransparency = 1; Title.TextXAlignment = Enum.TextXAlignment.Center; Title.Parent = Sidebar
-local SubVer = Instance.new("TextLabel"); SubVer.Text = "V2.2"; SubVer.Font = Enum.Font.Gotham; SubVer.TextSize = 14; SubVer.TextColor3 = Color3.fromRGB(180,180,180); SubVer.Size = UDim2.new(1, 0, 0, 20); SubVer.Position = UDim2.new(0, 0, 0, 45); SubVer.BackgroundTransparency = 1; SubVer.TextXAlignment = Enum.TextXAlignment.Center; SubVer.Parent = Sidebar
+local SubVer = Instance.new("TextLabel"); SubVer.Text = "V2.3"; SubVer.Font = Enum.Font.Gotham; SubVer.TextSize = 14; SubVer.TextColor3 = Color3.fromRGB(180,180,180); SubVer.Size = UDim2.new(1, 0, 0, 20); SubVer.Position = UDim2.new(0, 0, 0, 45); SubVer.BackgroundTransparency = 1; SubVer.TextXAlignment = Enum.TextXAlignment.Center; SubVer.Parent = Sidebar
 
 -- Containers & Tabs
 local PageContainer = Instance.new("Frame"); PageContainer.Size = UDim2.new(1, -150, 1, -20); PageContainer.Position = UDim2.new(0, 150, 0, 10); PageContainer.BackgroundTransparency = 1; PageContainer.Parent = MainFrame
@@ -144,7 +144,7 @@ local TabContainer = Instance.new("Frame"); TabContainer.Position = UDim2.new(0,
 local function CreateTab(name, pageToShow)
 	local Btn = Instance.new("TextButton"); Btn.Size = UDim2.new(1, 0, 0, 35); Btn.BackgroundColor3 = Color3.fromRGB(255, 255, 255); Btn.BackgroundTransparency = 0.9
 	Btn.Text = name; Btn.Font = Enum.Font.GothamBold
-    Btn.TextSize = 18 -- AUMENTADO PARA 18
+    Btn.TextSize = 17 -- DEFINIDO COMO 17
     Btn.TextColor3 = Colors.Text; Btn.Parent = TabContainer; Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 8)
 	Btn.MouseButton1Click:Connect(function() MainPage.Visible = false; ServerPage.Visible = false; pageToShow.Visible = true end)
 end
@@ -154,7 +154,7 @@ CreateTab("Main", MainPage); CreateTab("Server", ServerPage)
 local function AddToggle(text, callback)
 	local F = Instance.new("Frame"); F.Size = UDim2.new(1, -10, 0, 40); F.BackgroundColor3 = Colors.ItemBG; F.Parent = MainPage; Instance.new("UICorner", F).CornerRadius = UDim.new(0, 10)
 	local L = Instance.new("TextLabel"); L.Text = text; L.Font = Enum.Font.GothamBold
-    L.TextSize = 18 -- AUMENTADO PARA 18
+    L.TextSize = 17 -- DEFINIDO COMO 17
     L.TextColor3 = Colors.Text; L.TextXAlignment = Enum.TextXAlignment.Left; L.Position = UDim2.new(0, 15, 0, 0); L.Size = UDim2.new(0.6, 0, 1, 0); L.BackgroundTransparency = 1; L.Parent = F
 	local B = Instance.new("TextButton"); B.Text = ""; B.Size = UDim2.new(0, 24, 0, 24); B.Position = UDim2.new(1, -35, 0.5, -12); B.BackgroundColor3 = Colors.ToggleOff; B.Parent = F; Instance.new("UICorner", B).CornerRadius = UDim.new(1, 0)
 	local s = false; B.MouseButton1Click:Connect(function() s = not s; local colorInfo = TweenInfo.new(0.3); TweenService:Create(B, colorInfo, {BackgroundColor3 = s and Colors.ToggleOn or Colors.ToggleOff}):Play(); callback(s) end)
@@ -163,7 +163,7 @@ end
 local function AddSpeed()
 	local F = Instance.new("Frame"); F.Size = UDim2.new(1, -10, 0, 40); F.BackgroundColor3 = Colors.ItemBG; F.Parent = MainPage; Instance.new("UICorner", F).CornerRadius = UDim.new(0, 10)
 	local L = Instance.new("TextLabel"); L.Text = "Speed"; L.Font = Enum.Font.GothamBold
-    L.TextSize = 18 -- AUMENTADO PARA 18
+    L.TextSize = 17 -- DEFINIDO COMO 17
     L.TextColor3 = Colors.Text; L.TextXAlignment = Enum.TextXAlignment.Left; L.Position = UDim2.new(0, 15, 0, 0); L.Size = UDim2.new(0.3, 0, 1, 0); L.BackgroundTransparency = 1; L.Parent = F
 	local I = Instance.new("TextBox"); I.Text = "100"; I.Size = UDim2.new(0, 60, 0, 24); I.Position = UDim2.new(0.6, 0, 0.5, -12); I.BackgroundColor3 = Colors.Sidebar; I.TextColor3 = Colors.TextSelected; I.Parent = F; Instance.new("UICorner", I).CornerRadius = UDim.new(0, 6)
 	I.FocusLost:Connect(function() Settings.SpeedVal = tonumber(I.Text) or 100 end)
@@ -172,7 +172,7 @@ local function AddSpeed()
 end
 
 local Hop = Instance.new("TextButton"); Hop.Text = "Server Hop"; Hop.Font = Enum.Font.GothamBold
-Hop.TextSize = 18 -- AUMENTADO PARA 18
+Hop.TextSize = 17 -- DEFINIDO COMO 17
 Hop.Size = UDim2.new(0, 140, 0, 40); Hop.Position = UDim2.new(0, 10, 0, 10); Hop.BackgroundColor3 = Colors.ItemBG; Hop.TextColor3 = Colors.Text; Hop.Parent = ServerPage; Instance.new("UICorner", Hop).CornerRadius = UDim.new(0, 10)
 Hop.MouseButton1Click:Connect(function() local Servers = HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/"..game.PlaceId.."/servers/Public?sortOrder=Asc&limit=100")); for _, s in pairs(Servers.data) do if s.playing ~= s.maxPlayers then TeleportService:TeleportToPlaceInstance(game.PlaceId, s.id, LocalPlayer) end end end)
 
