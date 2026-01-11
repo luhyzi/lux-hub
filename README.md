@@ -14,8 +14,7 @@ local Settings = {
 	Speed = false,
 	SpeedVal = 100,
 	Fly = false,
-	Invisible = false,
-	TargetPlayer = nil
+	Invisible = false
 }
 
 -- CORES
@@ -32,25 +31,21 @@ local Colors = {
 
 -- GUI
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "LuxHub_DraggableBtn"
+ScreenGui.Name = "LuxHub_SlideAnim"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
--- FUNÇÃO GLOBAL DE ARRASTAR (DRAGGABLE)
+-- FUNÇÃO ARRASTAR
 local function MakeDraggable(gui)
 	local dragging, dragInput, dragStart, startPos
 	gui.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 then
-			dragging = true
-			dragStart = input.Position
-			startPos = gui.Position
+			dragging = true; dragStart = input.Position; startPos = gui.Position
 		end
 	end)
 	gui.InputChanged:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseMovement then
-			dragInput = input
-		end
+		if input.UserInputType == Enum.UserInputType.MouseMovement then dragInput = input end
 	end)
 	UserInputService.InputChanged:Connect(function(input)
 		if input == dragInput and dragging then
@@ -58,11 +53,7 @@ local function MakeDraggable(gui)
 			gui.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
 		end
 	end)
-	UserInputService.InputEnded:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 then
-			dragging = false
-		end
-	end)
+	UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
 end
 
 -- LOADING SCREEN
@@ -91,70 +82,80 @@ BarFill.Parent = BarBG
 Instance.new("UICorner", BarFill).CornerRadius = UDim.new(1, 0)
 
 -- ==========================================
--- BOTÃO REDONDO (DIREITA & ARRASTÁVEL)
+-- BOTÃO REDONDO (ESQUERDA)
 -- ==========================================
 local OpenBtn = Instance.new("ImageButton")
 OpenBtn.Name = "OpenButton"
 OpenBtn.Size = UDim2.new(0, 55, 0, 55)
--- POSIÇÃO: Lado Direito Superior
-OpenBtn.Position = UDim2.new(1, -80, 0.15, 0) 
+OpenBtn.Position = UDim2.new(0, 20, 0.15, 0) -- Lado Esquerdo
 OpenBtn.BackgroundColor3 = Colors.MainBG
 OpenBtn.Image = "rbxassetid://139243074283722"
 OpenBtn.Visible = false 
 OpenBtn.Parent = ScreenGui
 Instance.new("UICorner", OpenBtn).CornerRadius = UDim.new(1, 0)
-MakeDraggable(OpenBtn) -- AGORA É ARRASTÁVEL!
+MakeDraggable(OpenBtn)
 
 local Glow = Instance.new("ImageLabel")
 Glow.BackgroundTransparency = 1; Glow.Image = "rbxassetid://50288246"
 Glow.Size = UDim2.new(1.6, 0, 1.6, 0); Glow.Position = UDim2.new(-0.3, 0, -0.3, 0); Glow.Parent = OpenBtn
 
 -- ==========================================
--- JANELA PRINCIPAL
+-- JANELA PRINCIPAL (SLIDE ANIMATION)
 -- ==========================================
 local MainFrame = Instance.new("Frame")
 MainFrame.Size = UDim2.new(0, 480, 0, 300)
-MainFrame.Position = UDim2.new(0.5, -240, 0.4, -150) 
+-- Posição Inicial: Escondida lá em baixo da tela (Y = 1.5)
+MainFrame.Position = UDim2.new(0.5, -240, 1.5, 0) 
 MainFrame.BackgroundColor3 = Colors.MainBG
 MainFrame.Visible = false
 MainFrame.ClipsDescendants = true
 MainFrame.Parent = ScreenGui
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 20)
-MakeDraggable(MainFrame) -- JANELA TAMBÉM É ARRASTÁVEL
+MakeDraggable(MainFrame)
 
--- Animação Abrir/Fechar
+-- LÓGICA DA ANIMAÇÃO (BAIXO <-> CIMA)
 local isOpen = false
-local isDraggingBtn = false -- Verifica se está arrastando para não abrir ao soltar
+local isAnimating = false -- Impede spam de clique
 
-OpenBtn.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 then isDraggingBtn = false end
-end)
-OpenBtn.InputChanged:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseMovement then isDraggingBtn = true end
-end)
+OpenBtn.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 then isDraggingBtn = false end end)
+OpenBtn.InputChanged:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseMovement then isDraggingBtn = true end end)
 
 OpenBtn.MouseButton1Click:Connect(function()
-	-- Pequena lógica para evitar abrir se você estiver só arrastando o botão
-	-- Mas o MakeDraggable já consome o input, então o Click deve funcionar bem
+	if isAnimating then return end
+	isAnimating = true
+
 	if isOpen then
-		local closeTween = TweenService:Create(MainFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Size = UDim2.new(0, 0, 0, 0), BackgroundTransparency = 1})
+		-- FECHAR: Desce para baixo
+		-- Pega a posição X atual (caso tenha arrastado) e joga o Y lá pra baixo (1.5)
+		local currentX = MainFrame.Position.X
+		local closePos = UDim2.new(currentX.Scale, currentX.Offset, 1.5, 0)
+		
+		local closeTween = TweenService:Create(MainFrame, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.In), {Position = closePos})
 		closeTween:Play()
-		closeTween.Completed:Connect(function() if not isOpen then MainFrame.Visible = false end end)
+		
+		closeTween.Completed:Connect(function()
+			MainFrame.Visible = false
+			isAnimating = false
+		end)
 	else
+		-- ABRIR: Sobe do baixo
 		MainFrame.Visible = true
-		MainFrame.Size = UDim2.new(0, 0, 0, 0)
-		MainFrame.BackgroundTransparency = 0
-		MainFrame.Position = UDim2.new(0.5, 0, 0.4, 0) 
-		local openTweenSize = TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {Size = UDim2.new(0, 480, 0, 300)})
-		local openTweenPos = TweenService:Create(MainFrame, TweenInfo.new(0.5, Enum.EasingStyle.Elastic, Enum.EasingDirection.Out), {Position = UDim2.new(0.5, -240, 0.4, -150)})
-		openTweenSize:Play(); openTweenPos:Play()
+		-- Reseta posição para o centro-baixo para garantir a animação bonita
+		MainFrame.Position = UDim2.new(0.5, -240, 1.5, 0) 
+		
+		-- Animação indo para o Centro (0.4)
+		local openTween = TweenService:Create(MainFrame, TweenInfo.new(0.6, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Position = UDim2.new(0.5, -240, 0.4, -150)})
+		openTween:Play()
+		
+		openTween.Completed:Connect(function()
+			isAnimating = false
+		end)
 	end
 	isOpen = not isOpen
 end)
 
 -- Sidebar
-local Sidebar = Instance.new("Frame")
-Sidebar.Size = UDim2.new(0, 140, 1, 0); Sidebar.BackgroundColor3 = Colors.Sidebar; Sidebar.Parent = MainFrame
+local Sidebar = Instance.new("Frame"); Sidebar.Size = UDim2.new(0, 140, 1, 0); Sidebar.BackgroundColor3 = Colors.Sidebar; Sidebar.Parent = MainFrame
 Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 20)
 local Fix = Instance.new("Frame"); Fix.Size = UDim2.new(0,15,1,0); Fix.Position = UDim2.new(1,-15,0,0); Fix.BackgroundColor3 = Colors.Sidebar; Fix.BorderSizePixel=0; Fix.Parent=Sidebar
 
@@ -209,23 +210,28 @@ end
 
 local function AddTP()
 	local C = Instance.new("Frame"); C.Size = UDim2.new(1, -10, 0, 150); C.BackgroundTransparency = 1; C.Parent = MainPage
-	local List = Instance.new("ScrollingFrame"); List.Size = UDim2.new(0.5, 0, 1, 0); List.BackgroundColor3 = Colors.ItemBG; List.Parent = C
+	local List = Instance.new("ScrollingFrame"); List.Size = UDim2.new(1, -10, 1, -10); List.Position = UDim2.new(0, 5, 0, 5); List.BackgroundColor3 = Colors.ItemBG; List.Parent = C
 	Instance.new("UICorner", List).CornerRadius = UDim.new(0, 10); local LL = Instance.new("UIListLayout"); LL.Parent = List
-	local Action = Instance.new("Frame"); Action.Size = UDim2.new(0.45, 0, 0, 50); Action.Position = UDim2.new(0.55, 0, 0, 0); Action.BackgroundColor3 = Colors.ItemBG; Action.Parent = C
-	Instance.new("UICorner", Action).CornerRadius = UDim.new(0, 10)
-	local Ready = Instance.new("TextButton"); Ready.Text = "Ready"; Ready.Font = Enum.Font.GothamBold; Ready.Size = UDim2.new(0, 80, 0, 30); Ready.Position = UDim2.new(0.5, -40, 0.5, -15); Ready.BackgroundColor3 = Colors.Sidebar; Ready.TextColor3 = Colors.Text; Ready.Parent = Action
-	Instance.new("UICorner", Ready).CornerRadius = UDim.new(0, 8)
+
 	local function Refresh()
 		for _,v in pairs(List:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end
+		local TitleBtn = Instance.new("TextButton"); TitleBtn.Size = UDim2.new(1,0,0,25); TitleBtn.Text = "Click Name to Instant TP (Refresh)"; TitleBtn.TextColor3 = Colors.Accent; TitleBtn.BackgroundTransparency = 1; TitleBtn.Font = Enum.Font.GothamBold; TitleBtn.Parent = List
+		TitleBtn.MouseButton1Click:Connect(Refresh)
 		for _,p in pairs(Players:GetPlayers()) do
 			if p ~= LocalPlayer then
 				local b = Instance.new("TextButton"); b.Size = UDim2.new(1,0,0,30); b.Text = p.Name; b.TextColor3 = Colors.Text; b.BackgroundColor3 = Colors.ItemBG; b.BorderSizePixel = 0; b.Parent = List
-				b.MouseButton1Click:Connect(function() for _, other in pairs(List:GetChildren()) do if other:IsA("TextButton") then other.TextColor3 = Colors.Text end end; b.TextColor3 = Colors.TextSelected; Settings.TargetPlayer = p; Ready.Text = "Ready" end)
+				b.MouseButton1Click:Connect(function()
+					if p.Character and p.Character:FindFirstChild("HumanoidRootPart") and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+						LocalPlayer.Character.HumanoidRootPart.CFrame = p.Character.HumanoidRootPart.CFrame
+						b.Text = "Teleported!"
+						task.wait(1)
+						b.Text = p.Name
+					end
+				end)
 			end
 		end
 	end
 	List.MouseEnter:Connect(Refresh); Refresh()
-	Ready.MouseButton1Click:Connect(function() if Settings.TargetPlayer and Settings.TargetPlayer.Character and Settings.TargetPlayer.Character:FindFirstChild("HumanoidRootPart") then if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then LocalPlayer.Character.HumanoidRootPart.CFrame = Settings.TargetPlayer.Character.HumanoidRootPart.CFrame end else Ready.Text = "Select!" end end)
 end
 
 local Hop = Instance.new("TextButton"); Hop.Text = "Server Hop"; Hop.Size = UDim2.new(0, 140, 0, 40); Hop.Position = UDim2.new(0, 10, 0, 10); Hop.BackgroundColor3 = Colors.ItemBG; Hop.TextColor3 = Colors.Text; Hop.Font = Enum.Font.GothamBold; Hop.Parent = ServerPage
