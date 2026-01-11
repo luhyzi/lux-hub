@@ -31,6 +31,7 @@ local Colors = {
 	Text = Color3.fromRGB(200, 200, 200),
 	TextSelected = Color3.fromRGB(255, 255, 255),
 	Accent = Color3.fromRGB(160, 100, 255),
+    TargetPurple = Color3.fromRGB(130, 0, 255), -- Cor do alvo monitorado
 	Green = Color3.fromRGB(0, 255, 100),
 	Yellow = Color3.fromRGB(255, 170, 0),
 	Red = Color3.fromRGB(255, 50, 50)
@@ -38,7 +39,7 @@ local Colors = {
 
 -- GUI
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "LuxHub_v1.9.5"
+ScreenGui.Name = "LuxHub_v1.9.6"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
 ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
@@ -110,7 +111,7 @@ end)
 local Sidebar = Instance.new("Frame"); Sidebar.Size = UDim2.new(0, 140, 1, 0); Sidebar.BackgroundColor3 = Colors.Sidebar; Sidebar.Parent = MainFrame; Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 20)
 MakeDraggable(Sidebar, MainFrame)
 local Title = Instance.new("TextLabel"); Title.Text = "Lux Hub"; Title.Font = Enum.Font.GothamBold; Title.TextSize = 24; Title.TextColor3 = Colors.TextSelected; Title.Size = UDim2.new(1, 0, 0, 30); Title.Position = UDim2.new(0, 0, 0, 20); Title.BackgroundTransparency = 1; Title.TextXAlignment = Enum.TextXAlignment.Center; Title.Parent = Sidebar
-local SubVer = Instance.new("TextLabel"); SubVer.Text = "V1.9.5"; SubVer.Font = Enum.Font.Gotham; SubVer.TextSize = 14; SubVer.TextColor3 = Color3.fromRGB(180,180,180); SubVer.Size = UDim2.new(1, 0, 0, 20); SubVer.Position = UDim2.new(0, 0, 0, 45); SubVer.BackgroundTransparency = 1; SubVer.TextXAlignment = Enum.TextXAlignment.Center; SubVer.Parent = Sidebar
+local SubVer = Instance.new("TextLabel"); SubVer.Text = "V1.9.6"; SubVer.Font = Enum.Font.Gotham; SubVer.TextSize = 14; SubVer.TextColor3 = Color3.fromRGB(180,180,180); SubVer.Size = UDim2.new(1, 0, 0, 20); SubVer.Position = UDim2.new(0, 0, 0, 45); SubVer.BackgroundTransparency = 1; SubVer.TextXAlignment = Enum.TextXAlignment.Center; SubVer.Parent = Sidebar
 
 -- Containers
 local PageContainer = Instance.new("Frame"); PageContainer.Size = UDim2.new(1, -150, 1, -20); PageContainer.Position = UDim2.new(0, 150, 0, 10); PageContainer.BackgroundTransparency = 1; PageContainer.Parent = MainFrame
@@ -170,31 +171,44 @@ AddToggle("Esp", function(v) Settings.ESP = v end)
 AddToggle("No Clip", function(v) Settings.Noclip = v end)
 AddToggle("Fly", function(v) Settings.Fly = v end)
 AddToggle("FPS Boost", function(v) ApplySmoothTexture(v) end)
-AddToggle("Cam Lock", function(v) Settings.CamLock = v end) -- CAM LOCK ADICIONADO
+AddToggle("Cam Lock", function(v) Settings.CamLock = v end)
 AddToggle("Invisible", function(v) Settings.Invisible = v; if LocalPlayer.Character then for _,p in pairs(LocalPlayer.Character:GetDescendants()) do if p:IsA("BasePart") or p:IsA("Decal") then p.Transparency = v and 1 or 0 end end end end)
 
 -- ==========================================
 -- LOOPS E LÓGICA FINAL
 -- ==========================================
 RunService.RenderStepped:Connect(function()
-    -- LÓGICA CAM LOCK
+    -- LÓGICA CAM LOCK E TARGET ROXO
     if Settings.CamLock then
-        local target = GetClosestPlayer()
-        if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
-            Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Character.HumanoidRootPart.Position)
+        Settings.Target = GetClosestPlayer()
+        if Settings.Target and Settings.Target.Character and Settings.Target.Character:FindFirstChild("HumanoidRootPart") then
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, Settings.Target.Character.HumanoidRootPart.Position)
         end
+    else
+        Settings.Target = nil
     end
 
-	if StatusPage.Visible then
-        -- (Lógica de Status omitida aqui por espaço, mas mantida no código completo)
-	end
-
-	if Settings.ESP then
+	if Settings.ESP or Settings.CamLock then
 		for _, p in pairs(Players:GetPlayers()) do
 			if p ~= LocalPlayer and p.Character then
-				if not p.Character:FindFirstChild("LuxHighlight") then
-					local h = Instance.new("Highlight"); h.Name = "LuxHighlight"; h.FillColor = Color3.fromRGB(160, 80, 255); h.OutlineColor = Color3.new(1,1,1); h.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop; h.Parent = p.Character
-				end
+				local h = p.Character:FindFirstChild("LuxHighlight") or Instance.new("Highlight", p.Character)
+				h.Name = "LuxHighlight"
+                h.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                
+                -- LÓGICA DE COR DINÂMICA
+                if Settings.CamLock and Settings.Target == p then
+                    h.Enabled = true -- Sempre ligado se for o alvo do Cam Lock
+                    h.FillColor = Colors.TargetPurple
+                    h.FillTransparency = 0.2
+                    h.OutlineColor = Color3.new(1, 1, 1)
+                elseif Settings.ESP then
+                    h.Enabled = true
+                    h.FillColor = Colors.Accent
+                    h.FillTransparency = 0.5
+                    h.OutlineColor = Color3.new(1, 1, 1)
+                else
+                    h.Enabled = false
+                end
 			end
 		end
 	else
@@ -202,7 +216,7 @@ RunService.RenderStepped:Connect(function()
 	end
 end)
 
-RunService.Stepped:Connect(function() if (Settings.Noclip or Settings.Fly) and LocalPlayer.Character then for _,v in pairs(LocalPlayer.Character:GetDescendants()) do if v:IsA("BasePart") then v.CanCollide = false end end end end)
+RunService.Stepped:Connect(function() if (Settings.Noclip or Settings.Fly) and LocalPlayer.Character then for _,v in pairs(LocalPlayer.Character:GetDescendants()) do if v:A("BasePart") then v.CanCollide = false end end end end)
 
 -- LÓGICA FLY
 RunService.RenderStepped:Connect(function()
