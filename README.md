@@ -299,4 +299,128 @@ AddToggle("Invisible", function(v) Settings.Invisible = v; if LocalPlayer.Charac
 
 UserInputService.JumpRequest:Connect(function()
 	if Settings.InfiniteJump and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-		LocalPlayer.Character.Humanoid:
+		LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+	end
+end)
+
+-- ==========================================
+-- LOOPS (RESTORED)
+-- ==========================================
+RunService.RenderStepped:Connect(function()
+    if Settings.Speed and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        LocalPlayer.Character.Humanoid.WalkSpeed = Settings.SpeedVal
+    end
+
+    if StatusGroup.Visible then
+        local diff = tick() - JoinTime
+        local hours = math.floor(diff / 3600); local mins = math.floor((diff % 3600) / 60); local secs = math.floor(diff % 60)
+        ServerTimeLabel.Text = string.format("S.Time: %02d:%02d:%02d", hours, mins, secs)
+        TimeLabel.Text = "Time: " .. os.date("%H:%M:%S"); DateLabel.Text = "Date: " .. os.date("%d/%m/%Y")
+        
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            local hp = math.floor(LocalPlayer.Character.Humanoid.Health); local max = math.floor(LocalPlayer.Character.Humanoid.MaxHealth)
+            HealthLabel.Text = "HP: " .. hp .. "/" .. max
+            local pos = LocalPlayer.Character.HumanoidRootPart.Position
+            PosLabel.Text = string.format("Pos: %d, %d, %d", math.floor(pos.X), math.floor(pos.Y), math.floor(pos.Z))
+        end
+        PlayersLabel.Text = "Online: " .. #Players:GetPlayers() .. "/" .. Players.MaxPlayers
+        FPSLabel.Text = "FPS: " .. math.floor(workspace:GetRealPhysicsFPS())
+        local pingVal = Stats.Network.ServerStatsItem["Data Ping"]:GetValueString()
+        PingLabel.Text = "Ping: " .. math.floor(tonumber(pingVal:match("%d+"))) .. " ms"
+    end
+
+    local function GetClosestPlayer()
+        local closest = nil; local maxDist = math.huge
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                local dist = (LocalPlayer.Character.HumanoidRootPart.Position - p.Character.HumanoidRootPart.Position).Magnitude
+                if dist < maxDist then maxDist = dist; closest = p end
+            end
+        end
+        return closest
+    end
+
+    if Settings.CamLock then
+        Settings.Target = GetClosestPlayer()
+        if Settings.Target and Settings.Target.Character and Settings.Target.Character:FindFirstChild("HumanoidRootPart") then
+            Camera.CFrame = CFrame.new(Camera.CFrame.Position, Settings.Target.Character.HumanoidRootPart.Position)
+        end
+    else Settings.Target = nil end
+
+	if Settings.ESP or Settings.CamLock then
+		for _, p in pairs(Players:GetPlayers()) do
+			if p ~= LocalPlayer and p.Character then
+				local h = p.Character:FindFirstChild("LuxHighlight") or Instance.new("Highlight", p.Character)
+				h.Name = "LuxHighlight"; h.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                if Settings.CamLock and Settings.Target == p then h.Enabled = true; h.FillColor = Colors.TargetPurple; h.FillTransparency = 0.2; h.OutlineColor = Color3.new(1, 1, 1)
+                elseif Settings.ESP then h.Enabled = true; h.FillColor = Colors.Accent; h.FillTransparency = 0.5; h.OutlineColor = Color3.new(1, 1, 1)
+                else h.Enabled = false end
+			end
+		end
+	else for _, p in pairs(Players:GetPlayers()) do if p.Character and p.Character:FindFirstChild("LuxHighlight") then p.Character.LuxHighlight:Destroy() end end end
+end)
+
+RunService.Stepped:Connect(function() if (Settings.Noclip or Settings.Fly) and LocalPlayer.Character then for _,v in pairs(LocalPlayer.Character:GetDescendants()) do if v:IsA("BasePart") then v.CanCollide = false end end end end)
+
+-- FLY LOOP (MOBILE FIX)
+RunService.RenderStepped:Connect(function()
+	if Settings.Fly and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+		local root = LocalPlayer.Character.HumanoidRootPart
+        local hum = LocalPlayer.Character.Humanoid
+        
+		if not root:FindFirstChild("LuxFlyVelocity") then
+			local bv = Instance.new("BodyVelocity"); bv.Name = "LuxFlyVelocity"; bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge); bv.Velocity = Vector3.new(0, 0, 0); bv.Parent = root
+			local bg = Instance.new("BodyGyro"); bg.Name = "LuxFlyGyro"; bg.MaxTorque = Vector3.new(9e9, 9e9, 9e9); bg.P = 10000; bg.D = 100; bg.CFrame = root.CFrame; bg.Parent = root
+		end
+		
+        local bv = root:FindFirstChild("LuxFlyVelocity")
+        local bg = root:FindFirstChild("LuxFlyGyro")
+        
+        hum.PlatformStand = true
+        
+        local speed = Settings.SpeedVal
+        local moveDir = hum.MoveDirection
+        
+        if moveDir.Magnitude > 0 then
+            local camLook = Camera.CFrame.LookVector
+            local camFlat = Vector3.new(camLook.X, 0, camLook.Z).Unit
+            
+            local dot = camFlat:Dot(moveDir)
+            
+            if dot > 0.5 then
+                bv.Velocity = camLook * speed
+            elseif dot < -0.5 then
+                bv.Velocity = -camLook * speed
+            else
+                bv.Velocity = moveDir * speed
+            end
+        else
+            bv.Velocity = Vector3.new(0, 0, 0)
+        end
+        
+        bg.CFrame = Camera.CFrame
+	else
+		if LocalPlayer.Character then
+			local root = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+			if root then 
+                if root:FindFirstChild("LuxFlyVelocity") then root.LuxFlyVelocity:Destroy() end
+                if root:FindFirstChild("LuxFlyGyro") then root.LuxFlyGyro:Destroy() end 
+            end
+			local hum = LocalPlayer.Character:FindFirstChild("Humanoid")
+            if hum then hum.PlatformStand = false end
+		end
+	end
+end)
+
+-- FINALIZAÇÃO
+local tw = TweenService:Create(BarFill, TweenInfo.new(3), {Size = UDim2.new(1, 0, 1, 0)}); tw:Play()
+tw.Completed:Connect(function() 
+    task.wait(0.5)
+    local blurOff = TweenService:Create(LoadingBlur, TweenInfo.new(1), {Size = 0}); blurOff:Play()
+	blurOff.Completed:Connect(function() 
+        LoadingBlur:Destroy(); 
+        LoadingContainer:Destroy(); 
+        OpenBtn.Visible = true 
+        ToggleMenu() -- Auto Open
+    end)
+end)
