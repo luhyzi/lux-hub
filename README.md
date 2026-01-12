@@ -45,7 +45,7 @@ local Colors = {
 
 -- GUI
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "LuxHub_v2.2_Final" -- Nome interno ajustado
+ScreenGui.Name = "LuxHub_v2.2_MobileFix"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
 ScreenGui.DisplayOrder = 10000 
@@ -162,7 +162,7 @@ OpenBtn.MouseButton1Click:Connect(ToggleMenu)
 -- Sidebar
 local Sidebar = Instance.new("Frame"); Sidebar.Size = UDim2.new(0, 130, 1, 0); Sidebar.BackgroundColor3 = Colors.Sidebar; Sidebar.ZIndex = 6; Sidebar.Parent = MainFrame; Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 20)
 local Title = Instance.new("TextLabel"); Title.Text = "Lux Hub"; Title.Font = Enum.Font.GothamBold; Title.TextSize = 22; Title.TextColor3 = Colors.TextSelected; Title.Size = UDim2.new(1, 0, 0, 30); Title.Position = UDim2.new(0, 0, 0, 20); Title.BackgroundTransparency = 1; Title.TextXAlignment = Enum.TextXAlignment.Center; Title.ZIndex = 7; Title.Parent = Sidebar
--- ALTERADO PARA V2.2
+-- VERSÃO V2.2
 local SubVer = Instance.new("TextLabel"); SubVer.Text = "V2.2"; SubVer.Font = Enum.Font.Gotham; SubVer.TextSize = 12; SubVer.TextColor3 = Color3.fromRGB(180,180,180); SubVer.Size = UDim2.new(1, 0, 0, 20); SubVer.Position = UDim2.new(0, 0, 0, 45); SubVer.BackgroundTransparency = 1; SubVer.TextXAlignment = Enum.TextXAlignment.Center; SubVer.ZIndex = 7; SubVer.Parent = Sidebar
 
 -- Drag Zone
@@ -173,21 +173,21 @@ local CloseBtn = Instance.new("TextButton"); CloseBtn.Name = "CloseButton"
 CloseBtn.Size = UDim2.new(0, 30, 0, 30); CloseBtn.Position = UDim2.new(1, -40, 0, 5) 
 CloseBtn.BackgroundColor3 = Colors.CloseBtn; CloseBtn.Text = "X"; CloseBtn.Font = Enum.Font.GothamBold; CloseBtn.TextSize = 16; CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255); CloseBtn.ZIndex = 10; CloseBtn.Parent = MainFrame; Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(1, 0); CloseBtn.MouseButton1Click:Connect(function() if isOpen then ToggleMenu() end end)
 
--- Containers (CANVASGROUP PARA O FADE)
+-- Containers (CANVASGROUP PARA FADE SUAVE)
 local PageContainer = Instance.new("Frame"); PageContainer.Size = UDim2.new(1, -140, 1, -40); PageContainer.Position = UDim2.new(0, 140, 0, 40); PageContainer.BackgroundTransparency = 1; PageContainer.ZIndex = 6; PageContainer.Parent = MainFrame
 
--- Main Page (CanvasGroup)
+-- Main Page
 local MainGroup = Instance.new("CanvasGroup"); MainGroup.Size = UDim2.new(1, 0, 1, 0); MainGroup.BackgroundTransparency = 1; MainGroup.ZIndex = 6; MainGroup.Visible = true; MainGroup.Parent = PageContainer
 local MainPage = Instance.new("ScrollingFrame"); MainPage.Size = UDim2.new(1, 0, 1, 0); MainPage.BackgroundTransparency = 1; MainPage.ScrollBarThickness = 2; MainPage.ZIndex = 6; MainPage.Parent = MainGroup; local UIList = Instance.new("UIListLayout"); UIList.Padding = UDim.new(0, 8); UIList.Parent = MainPage
 
--- Status Page (CanvasGroup)
+-- Status Page
 local StatusGroup = Instance.new("CanvasGroup"); StatusGroup.Size = UDim2.new(1, 0, 1, 0); StatusGroup.BackgroundTransparency = 1; StatusGroup.ZIndex = 6; StatusGroup.Visible = false; StatusGroup.Parent = PageContainer
 
--- Server Page (CanvasGroup)
+-- Server Page
 local ServerGroup = Instance.new("CanvasGroup"); ServerGroup.Size = UDim2.new(1, 0, 1, 0); ServerGroup.BackgroundTransparency = 1; ServerGroup.ZIndex = 6; ServerGroup.Visible = false; ServerGroup.Parent = PageContainer
 
 -- ==========================================
--- SISTEMA DE ABAS (ULTRA SMOOTH)
+-- SISTEMA DE ABAS SUAVE
 -- ==========================================
 local TabContainer = Instance.new("Frame"); TabContainer.Position = UDim2.new(0, 5, 0, 80); TabContainer.Size = UDim2.new(1, -10, 1, -90); TabContainer.BackgroundTransparency = 1; TabContainer.ZIndex = 7; TabContainer.Parent = Sidebar; local TabList = Instance.new("UIListLayout"); TabList.Padding = UDim.new(0, 8); TabList.Parent = TabContainer
 
@@ -298,4 +298,5 @@ AddToggle("Cam Lock", function(v) Settings.CamLock = v end)
 AddToggle("Invisible", function(v) Settings.Invisible = v; if LocalPlayer.Character then for _,p in pairs(LocalPlayer.Character:GetDescendants()) do if p:IsA("BasePart") or p:IsA("Decal") then p.Transparency = v and 1 or 0 end end end end)
 
 UserInputService.JumpRequest:Connect(function()
-	if Settings.InfiniteJump and LocalPlayer.Character and LocalPlayer.
+	if Settings.InfiniteJump and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+		LocalPlayer.Character.Humanoid:
