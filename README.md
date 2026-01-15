@@ -7,6 +7,7 @@ local HttpService = game:GetService("HttpService")
 local Lighting = game:GetService("Lighting")
 local Stats = game:GetService("Stats")
 local VirtualUser = game:GetService("VirtualUser")
+local TextChatService = game:GetService("TextChatService")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 local Mouse = LocalPlayer:GetMouse()
@@ -14,9 +15,13 @@ local Mouse = LocalPlayer:GetMouse()
 local JoinTime = tick()
 
 local Settings = {
+    -- Main
     ESP = false, Fullbright = false, FOV = 70, Hitbox = false, NoFog = false, Crosshair = false, CamLock = false, Target = nil,
+    -- Player
     Noclip = false, Speed = false, SpeedVal = 100, Fly = false, Invisible = false, InfiniteJump = false, HighJump = false, HighJumpVal = 50,
-    ClickTP = false, SpinBot = false, AntiAFK = false, BHop = false, NoFall = false, TpTargetPlayer = nil
+    ClickTP = false, SpinBot = false, AntiAFK = false, BHop = false, NoFall = false, TpTargetPlayer = nil,
+    -- Misc
+    Spider = false, ChatSpam = false, ChatMsg = "Lux Hub on Top!"
 }
 
 local Colors = {
@@ -26,7 +31,7 @@ local Colors = {
 }
 
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "LuxHub_v2.4_InvisibleFix"
+ScreenGui.Name = "LuxHub_v2.5_SidebarFix"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
 ScreenGui.IgnoreGuiInset = true 
@@ -62,7 +67,7 @@ OpenBtn.MouseButton1Click:Connect(ToggleMenu)
 
 local Sidebar = Instance.new("Frame", MainFrame); Sidebar.Size=UDim2.new(0,130,1,0); Sidebar.BackgroundColor3=Colors.Sidebar; Sidebar.ZIndex=6; Instance.new("UICorner", Sidebar).CornerRadius=UDim.new(0,20)
 local Title = Instance.new("TextLabel", Sidebar); Title.Text="Lux Hub"; Title.Font=Enum.Font.GothamBold; Title.TextSize=22; Title.TextColor3=Colors.TextSelected; Title.Size=UDim2.new(1,0,0,30); Title.Position=UDim2.new(0,0,0,20); Title.BackgroundTransparency=1; Title.ZIndex=7
-local SubVer = Instance.new("TextLabel", Sidebar); SubVer.Text="V2.4"; SubVer.Font=Enum.Font.Gotham; SubVer.TextSize=12; SubVer.TextColor3=Color3.fromRGB(180,180,180); SubVer.Size=UDim2.new(1,0,0,20); SubVer.Position=UDim2.new(0,0,0,45); SubVer.BackgroundTransparency=1; SubVer.ZIndex=7
+local SubVer = Instance.new("TextLabel", Sidebar); SubVer.Text="V2.5"; SubVer.Font=Enum.Font.Gotham; SubVer.TextSize=12; SubVer.TextColor3=Color3.fromRGB(180,180,180); SubVer.Size=UDim2.new(1,0,0,20); SubVer.Position=UDim2.new(0,0,0,45); SubVer.BackgroundTransparency=1; SubVer.ZIndex=7
 
 local DragFrame = Instance.new("Frame", MainFrame); DragFrame.Size=UDim2.new(1,-130,0,35); DragFrame.Position=UDim2.new(0,130,0,0); DragFrame.BackgroundTransparency=1; DragFrame.ZIndex=10; MakeDraggable(DragFrame, MainFrame)
 local PageTitle = Instance.new("TextLabel", MainFrame); PageTitle.Text="Main"; PageTitle.Font=Enum.Font.GothamBold; PageTitle.TextSize=20; PageTitle.TextColor3=Colors.TextSelected; PageTitle.Size=UDim2.new(1,-170,0,35); PageTitle.Position=UDim2.new(0,130,0,0); PageTitle.BackgroundTransparency=1; PageTitle.ZIndex=7
@@ -81,11 +86,30 @@ end
 -- PAGES STRUCTURE
 local MainGroup = Instance.new("CanvasGroup", PageContainer); MainGroup.Size=UDim2.new(1,0,1,0); MainGroup.BackgroundTransparency=1; MainGroup.ZIndex=6; local MainPage = CreateScrollingPage(MainGroup)
 local PlayerGroup = Instance.new("CanvasGroup", PageContainer); PlayerGroup.Size=UDim2.new(1,0,1,0); PlayerGroup.BackgroundTransparency=1; PlayerGroup.ZIndex=6; PlayerGroup.Visible=false; local PlayerPage = CreateScrollingPage(PlayerGroup)
+local MiscGroup = Instance.new("CanvasGroup", PageContainer); MiscGroup.Size=UDim2.new(1,0,1,0); MiscGroup.BackgroundTransparency=1; MiscGroup.ZIndex=6; MiscGroup.Visible=false; local MiscPage = CreateScrollingPage(MiscGroup)
 local StatusGroup = Instance.new("Frame", PageContainer); StatusGroup.Size=UDim2.new(1,0,1,0); StatusGroup.BackgroundTransparency=1; StatusGroup.ZIndex=6; StatusGroup.Visible=false; local StatusPage = CreateScrollingPage(StatusGroup)
 local ServerGroup = Instance.new("Frame", PageContainer); ServerGroup.Size=UDim2.new(1,0,1,0); ServerGroup.BackgroundTransparency=1; ServerGroup.ZIndex=6; ServerGroup.Visible=false; local ServerPage = CreateScrollingPage(ServerGroup)
 
--- TAB BUTTONS
-local TabContainer = Instance.new("Frame", Sidebar); TabContainer.Position=UDim2.new(0,5,0,80); TabContainer.Size=UDim2.new(1,-10,1,-90); TabContainer.BackgroundTransparency=1; TabContainer.ZIndex=7; Instance.new("UIListLayout", TabContainer).Padding=UDim.new(0,8)
+-- SIDEBAR SCROLL (FIXED CENTERED)
+local TabContainer = Instance.new("ScrollingFrame", Sidebar)
+TabContainer.Position = UDim2.new(0, 0, 0, 80) -- Full width
+TabContainer.Size = UDim2.new(1, 0, 1, -90)
+TabContainer.BackgroundTransparency = 1
+TabContainer.ZIndex = 7
+TabContainer.ScrollBarThickness = 2
+TabContainer.ScrollBarImageColor3 = Colors.Accent
+TabContainer.AutomaticCanvasSize = Enum.AutomaticSize.Y
+TabContainer.CanvasSize = UDim2.new(0,0,0,0)
+
+local TabListLayout = Instance.new("UIListLayout", TabContainer)
+TabListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center -- CENTRALIZA OS BOTÕES
+TabListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+TabListLayout.Padding = UDim.new(0, 8)
+
+local TabPadding = Instance.new("UIPadding", TabContainer)
+TabPadding.PaddingTop = UDim.new(0, 5)
+TabPadding.PaddingBottom = UDim.new(0, 5)
+
 local TabButtons={}; local CurrentPage=MainGroup
 local function SwitchTab(btn, newPage)
     if CurrentPage==newPage then return end
@@ -96,10 +120,11 @@ local function SwitchTab(btn, newPage)
     CurrentPage.Visible=false; newPage.Visible=true; CurrentPage=newPage
 end
 local function CreateTab(name, page)
-	local Btn = Instance.new("TextButton", TabContainer); Btn.Size=UDim2.new(1,0,0,35); Btn.BackgroundColor3=Color3.new(1,1,1); Btn.BackgroundTransparency=0.9; Btn.Text=name; Btn.Font=Enum.Font.GothamBold; Btn.TextSize=16; Btn.TextColor3=Colors.Text; Btn.ZIndex=8; Instance.new("UICorner", Btn).CornerRadius=UDim.new(0,8)
+    -- BOTÃO MENOR (0.85) PARA NÃO CORTAR
+	local Btn = Instance.new("TextButton", TabContainer); Btn.Size=UDim2.new(0.85,0,0,35); Btn.BackgroundColor3=Color3.new(1,1,1); Btn.BackgroundTransparency=0.9; Btn.Text=name; Btn.Font=Enum.Font.GothamBold; Btn.TextSize=16; Btn.TextColor3=Colors.Text; Btn.ZIndex=8; Instance.new("UICorner", Btn).CornerRadius=UDim.new(0,8)
     TabButtons[name]=Btn; Btn.MouseButton1Click:Connect(function() SwitchTab(Btn, page) end)
 end
-CreateTab("Main", MainGroup); CreateTab("Player", PlayerGroup); CreateTab("Status", StatusGroup); CreateTab("Server", ServerGroup)
+CreateTab("Main", MainGroup); CreateTab("Player", PlayerGroup); CreateTab("Misc", MiscGroup); CreateTab("Status", StatusGroup); CreateTab("Server", ServerGroup)
 TabButtons["Main"].BackgroundTransparency=0.6; TabButtons["Main"].TextColor3=Colors.TextSelected
 
 -- HELPERS
@@ -122,42 +147,37 @@ local function AddSlider(text, parent, min, max, callback, default)
     P.MouseButton1Click:Connect(function() current=math.min(max,current+10); Update() end)
 end
 
--- TP PLAYER OVERLAY & SYSTEM
+local function AddTextBox(placeholder, parent, callback)
+    local F = Instance.new("Frame", parent); F.Size=UDim2.new(1,-10,0,40); F.BackgroundColor3=Colors.ItemBG; F.ZIndex=6; Instance.new("UICorner", F).CornerRadius=UDim.new(0,10)
+    local T = Instance.new("TextBox", F); T.Size=UDim2.new(1,-20,1,0); T.Position=UDim2.new(0,10,0,0); T.BackgroundTransparency=1; T.Text=""; T.PlaceholderText=placeholder; T.TextColor3=Colors.Text; T.PlaceholderColor3=Color3.fromRGB(150,150,150); T.Font=Enum.Font.GothamBold; T.TextSize=16; T.ZIndex=7
+    T.FocusLost:Connect(function(enter) if enter then callback(T.Text) end end)
+end
+
+local function AddLabel(text, parent)
+    local F = Instance.new("Frame", parent); F.Size=UDim2.new(1,-10,0,30); F.BackgroundTransparency=1; F.ZIndex=6
+    local L = Instance.new("TextLabel", F); L.Size=UDim2.new(1,0,1,0); L.BackgroundTransparency=1; L.Text=text; L.TextColor3=Color3.fromRGB(150,150,150); L.Font=Enum.Font.GothamBold; L.TextSize=16; L.ZIndex=7
+end
+
+-- TP PLAYER OVERLAY
 local PlayerSelectFrame = Instance.new("Frame", MainFrame); PlayerSelectFrame.Size=UDim2.new(0.8,0,0.7,0); PlayerSelectFrame.Position=UDim2.new(0.5,0,0.55,0); PlayerSelectFrame.AnchorPoint=Vector2.new(0.5,0.5); PlayerSelectFrame.BackgroundColor3=Color3.fromRGB(35,15,60); PlayerSelectFrame.ZIndex=20; PlayerSelectFrame.Visible=false; Instance.new("UICorner", PlayerSelectFrame).CornerRadius=UDim.new(0,10)
 local PlayerScroll = Instance.new("ScrollingFrame", PlayerSelectFrame); PlayerScroll.Size=UDim2.new(1,-10,1,-10); PlayerScroll.Position=UDim2.new(0,5,0,5); PlayerScroll.BackgroundTransparency=1; PlayerScroll.ZIndex=21; PlayerScroll.ScrollBarThickness=2; PlayerScroll.AutomaticCanvasSize=Enum.AutomaticSize.Y; Instance.new("UIListLayout", PlayerScroll).Padding=UDim.new(0,5)
-local TpBtnLabel = nil
+local TpBtnLabel = nil; local SpectateBtnLabel = nil
 
 local function RefreshPlayerList()
     for _,v in pairs(PlayerScroll:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end
     for _,p in pairs(Players:GetPlayers()) do
         if p~=LocalPlayer then
             local B = Instance.new("TextButton", PlayerScroll); B.Size=UDim2.new(1,0,0,30); B.BackgroundColor3=Colors.ItemBG; B.Text=p.Name; B.TextColor3=Colors.Text; B.Font=Enum.Font.GothamBold; B.TextSize=16; B.ZIndex=22; Instance.new("UICorner", B).CornerRadius=UDim.new(0,5)
-            B.MouseButton1Click:Connect(function() Settings.TpTargetPlayer=p; PlayerSelectFrame.Visible=false; if TpBtnLabel then TpBtnLabel.Text="Teleport to: "..p.Name end end)
+            B.MouseButton1Click:Connect(function() Settings.TpTargetPlayer=p; PlayerSelectFrame.Visible=false; if TpBtnLabel then TpBtnLabel.Text="Teleport to: "..p.Name end; if SpectateBtnLabel then SpectateBtnLabel.Text="Spectate: "..p.Name end end)
         end
     end
 end
 
 local function AddTpSystem(parent)
-    -- TÍTULO DA SEÇÃO
-    local Title = Instance.new("TextLabel", parent)
-    Title.Size = UDim2.new(1, -10, 0, 30)
-    Title.BackgroundTransparency = 1
-    Title.Text = "TP Player System"
-    Title.Font = Enum.Font.GothamBold
-    Title.TextColor3 = Colors.Accent
-    Title.TextSize = 18
-    Title.TextXAlignment = Enum.TextXAlignment.Left
-    Title.Position = UDim2.new(0, 5, 0, 0)
-
-    -- Botão Select
-    local F1 = Instance.new("Frame", parent); F1.Size=UDim2.new(1,-10,0,40); F1.BackgroundColor3=Colors.ItemBG; F1.ZIndex=6; Instance.new("UICorner", F1).CornerRadius=UDim.new(0,10)
-    local B1 = Instance.new("TextButton", F1); B1.Size=UDim2.new(1,0,1,0); B1.BackgroundTransparency=1; B1.Text="Select Player..."; B1.Font=Enum.Font.GothamBold; B1.TextSize=17; B1.TextColor3=Colors.Text; B1.ZIndex=7
-    B1.MouseButton1Click:Connect(function() RefreshPlayerList(); PlayerSelectFrame.Visible=not PlayerSelectFrame.Visible end)
-
-    -- Botão Teleport
-    local F2 = Instance.new("Frame", parent); F2.Size=UDim2.new(1,-10,0,40); F2.BackgroundColor3=Colors.ItemBG; F2.ZIndex=6; Instance.new("UICorner", F2).CornerRadius=UDim.new(0,10)
-    TpBtnLabel = Instance.new("TextButton", F2); TpBtnLabel.Size=UDim2.new(1,0,1,0); TpBtnLabel.BackgroundTransparency=1; TpBtnLabel.Text="Teleport to Target"; TpBtnLabel.Font=Enum.Font.GothamBold; TpBtnLabel.TextSize=17; TpBtnLabel.TextColor3=Colors.Accent; TpBtnLabel.ZIndex=7
-    TpBtnLabel.MouseButton1Click:Connect(function() if Settings.TpTargetPlayer and Settings.TpTargetPlayer.Character and Settings.TpTargetPlayer.Character:FindFirstChild("HumanoidRootPart") and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then LocalPlayer.Character.HumanoidRootPart.CFrame=Settings.TpTargetPlayer.Character.HumanoidRootPart.CFrame*CFrame.new(0,0,3) end end)
+    local Title = Instance.new("TextLabel", parent); Title.Size = UDim2.new(1, -10, 0, 30); Title.BackgroundTransparency = 1; Title.Text = "Player Control System"; Title.Font = Enum.Font.GothamBold; Title.TextColor3 = Colors.Accent; Title.TextSize = 18; Title.TextXAlignment = Enum.TextXAlignment.Left; Title.Position = UDim2.new(0, 5, 0, 0)
+    local F1 = Instance.new("Frame", parent); F1.Size=UDim2.new(1,-10,0,40); F1.BackgroundColor3=Colors.ItemBG; F1.ZIndex=6; Instance.new("UICorner", F1).CornerRadius=UDim.new(0,10); local B1 = Instance.new("TextButton", F1); B1.Size=UDim2.new(1,0,1,0); B1.BackgroundTransparency=1; B1.Text="Select Player..."; B1.Font=Enum.Font.GothamBold; B1.TextSize=17; B1.TextColor3=Colors.Text; B1.ZIndex=7; B1.MouseButton1Click:Connect(function() RefreshPlayerList(); PlayerSelectFrame.Visible=not PlayerSelectFrame.Visible end)
+    local F2 = Instance.new("Frame", parent); F2.Size=UDim2.new(1,-10,0,40); F2.BackgroundColor3=Colors.ItemBG; F2.ZIndex=6; Instance.new("UICorner", F2).CornerRadius=UDim.new(0,10); TpBtnLabel = Instance.new("TextButton", F2); TpBtnLabel.Size=UDim2.new(1,0,1,0); TpBtnLabel.BackgroundTransparency=1; TpBtnLabel.Text="Teleport to Target"; TpBtnLabel.Font=Enum.Font.GothamBold; TpBtnLabel.TextSize=17; TpBtnLabel.TextColor3=Colors.Accent; TpBtnLabel.ZIndex=7; TpBtnLabel.MouseButton1Click:Connect(function() if Settings.TpTargetPlayer and Settings.TpTargetPlayer.Character and Settings.TpTargetPlayer.Character:FindFirstChild("HumanoidRootPart") and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then LocalPlayer.Character.HumanoidRootPart.CFrame=Settings.TpTargetPlayer.Character.HumanoidRootPart.CFrame*CFrame.new(0,0,3) end end)
+    local F3 = Instance.new("Frame", parent); F3.Size=UDim2.new(1,-10,0,40); F3.BackgroundColor3=Colors.ItemBG; F3.ZIndex=6; Instance.new("UICorner", F3).CornerRadius=UDim.new(0,10); SpectateBtnLabel = Instance.new("TextButton", F3); SpectateBtnLabel.Size=UDim2.new(1,0,1,0); SpectateBtnLabel.BackgroundTransparency=1; SpectateBtnLabel.Text="Spectate Target"; SpectateBtnLabel.Font=Enum.Font.GothamBold; SpectateBtnLabel.TextSize=17; SpectateBtnLabel.TextColor3=Colors.TargetPurple; SpectateBtnLabel.ZIndex=7; SpectateBtnLabel.MouseButton1Click:Connect(function() if Camera.CameraSubject == LocalPlayer.Character.Humanoid then if Settings.TpTargetPlayer and Settings.TpTargetPlayer.Character and Settings.TpTargetPlayer.Character:FindFirstChild("Humanoid") then Camera.CameraSubject = Settings.TpTargetPlayer.Character.Humanoid; SpectateBtnLabel.Text = "Stop Spectating" end else if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then Camera.CameraSubject = LocalPlayer.Character.Humanoid; if Settings.TpTargetPlayer then SpectateBtnLabel.Text = "Spectate: " .. Settings.TpTargetPlayer.Name else SpectateBtnLabel.Text = "Spectate Target" end end end end)
 end
 
 -- CONTENT
@@ -181,81 +201,70 @@ AddToggle("Click TP (Touch/Click)", PlayerPage, function(v) Settings.ClickTP=v e
 AddToggle("SpinBot", PlayerPage, function(v) Settings.SpinBot=v end)
 AddToggle("B-Hop", PlayerPage, function(v) Settings.BHop=v end)
 AddToggle("No Fall Damage", PlayerPage, function(v) Settings.NoFall=v end)
-AddToggle("Invisible", PlayerPage, function(v) 
-    Settings.Invisible=v
-    if LocalPlayer.Character then
-        for _,p in pairs(LocalPlayer.Character:GetDescendants()) do
-            if p:IsA("BasePart") or p:IsA("Decal") then
-                if v then
-                    p.Transparency = 1
-                else
-                    if p.Name == "HumanoidRootPart" then
-                        p.Transparency = 1 -- Fix: Mantém o RootPart invisível
-                    else
-                        p.Transparency = 0
-                    end
-                end
-            end
-        end
-    end
-end)
+AddToggle("Invisible", PlayerPage, function(v) Settings.Invisible=v; if LocalPlayer.Character then for _,p in pairs(LocalPlayer.Character:GetDescendants()) do if p:IsA("BasePart") or p:IsA("Decal") then if v then p.Transparency = 1 else if p.Name == "HumanoidRootPart" then p.Transparency = 1 else p.Transparency = 0 end end end end end end)
 AddToggle("Anti-AFK", PlayerPage, function(v) Settings.AntiAFK=v; if v then LocalPlayer.Idled:Connect(function() if Settings.AntiAFK then VirtualUser:Button2Down(Vector2.new(0,0)); VirtualUser:Button2Up(Vector2.new(0,0)) end end) end end)
 AddTpSystem(PlayerPage)
 
--- STATUS REBUILT (COMPLETE)
-local StatsList = Instance.new("UIListLayout", StatusPage); StatsList.Padding = UDim.new(0, 5)
-local function AddStat(text) local L = Instance.new("TextLabel", StatusPage); L.Size = UDim2.new(1, 0, 0, 25); L.Text=text; L.Font=Enum.Font.GothamBold; L.TextSize=15; L.TextColor3=Colors.Text; L.BackgroundTransparency=1; L.TextXAlignment=0; L.ZIndex=10; return L end
+-- MISC PAGE CONTENT
+AddLabel("Fling: Em Breve...", MiscPage)
+AddToggle("Spider (Walk on Walls)", MiscPage, function(v) Settings.Spider = v end)
+AddTextBox("Chat Message...", MiscPage, function(text) Settings.ChatMsg = text end)
+AddToggle("Auto Chat Spammer", MiscPage, function(v) Settings.ChatSpam = v end)
 
-local s_Ply = AddStat("Player: " .. LocalPlayer.Name)
-local s_Reg = AddStat("Region: ...")
-local s_SrvTime = AddStat("Server Time: 00:00:00")
-local s_Date = AddStat("Date: 00/00/00")
-local s_Time = AddStat("Time: 00:00:00")
-local s_Exec = AddStat("Executor: ...")
-local s_HP = AddStat("Health: 100/100")
-local s_Pos = AddStat("Pos: 0, 0, 0")
-
-task.spawn(function()
-    pcall(function() 
-        local data = HttpService:JSONDecode(game:HttpGet("http://ip-api.com/json/"))
-        s_Reg.Text = "Region: " .. (data.countryCode or "Unknown") .. " - " .. (data.regionName or "Unknown")
-    end)
-    s_Exec.Text = "Executor: " .. (identifyexecutor and identifyexecutor() or "Unknown")
-end)
-
--- SERVER PAGE
+-- SERVER PAGE (WITH REJOIN)
 local HopBtn = Instance.new("TextButton", ServerPage); HopBtn.Size=UDim2.new(1,-10,0,45); HopBtn.BackgroundColor3=Colors.ItemBG; HopBtn.Text="Server Hop"; HopBtn.TextColor3=Colors.Text; HopBtn.Font=Enum.Font.GothamBold; HopBtn.TextSize=17; HopBtn.ZIndex=10; Instance.new("UICorner", HopBtn).CornerRadius=UDim.new(0,10)
 HopBtn.MouseButton1Click:Connect(function() local sfUrl="https://games.roblox.com/v1/games/%s/servers/Public?sortOrder=Asc&limit=100"; local req=game:HttpGet(string.format(sfUrl, game.PlaceId)); local body=HttpService:JSONDecode(req); if body and body.data then for i,v in next,body.data do if type(v)=="table" and tonumber(v.playing) and tonumber(v.maxPlayers) and v.playing<v.maxPlayers and v.id~=game.JobId then TeleportService:TeleportToPlaceInstance(game.PlaceId, v.id, LocalPlayer) break end end end end)
+-- REJOIN BUTTON
+local RejoinBtn = Instance.new("TextButton", ServerPage); RejoinBtn.Size=UDim2.new(1,-10,0,45); RejoinBtn.BackgroundColor3=Colors.ItemBG; RejoinBtn.Text="Rejoin Server"; RejoinBtn.TextColor3=Colors.Text; RejoinBtn.Font=Enum.Font.GothamBold; RejoinBtn.TextSize=17; RejoinBtn.ZIndex=10; Instance.new("UICorner", RejoinBtn).CornerRadius=UDim.new(0,10)
+RejoinBtn.MouseButton1Click:Connect(function() TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer) end)
 
--- CLICK TP LOGIC (TOUCH FIX)
-Mouse.Button1Down:Connect(function()
-    if Settings.ClickTP then
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(Mouse.Hit.p + Vector3.new(0, 3, 0))
-        end
-    end
-end)
+-- STATUS REBUILT
+local StatsList = Instance.new("UIListLayout", StatusPage); StatsList.Padding = UDim.new(0, 5)
+local function AddStat(text) local L = Instance.new("TextLabel", StatusPage); L.Size = UDim2.new(1, 0, 0, 25); L.Text=text; L.Font=Enum.Font.GothamBold; L.TextSize=15; L.TextColor3=Colors.Text; L.BackgroundTransparency=1; L.TextXAlignment=0; L.ZIndex=10; return L end
+local s_Ply = AddStat("Player: " .. LocalPlayer.Name); local s_Reg = AddStat("Region: ..."); local s_SrvTime = AddStat("Server Time: 00:00:00"); local s_Date = AddStat("Date: 00/00/00"); local s_Time = AddStat("Time: 00:00:00"); local s_Exec = AddStat("Executor: ..."); local s_HP = AddStat("Health: 100/100"); local s_Pos = AddStat("Pos: 0, 0, 0")
+task.spawn(function() pcall(function() local data = HttpService:JSONDecode(game:HttpGet("http://ip-api.com/json/")); s_Reg.Text = "Region: " .. (data.countryCode or "Unknown") .. " - " .. (data.regionName or "Unknown") end); s_Exec.Text = "Executor: " .. (identifyexecutor and identifyexecutor() or "Unknown") end)
 
--- MAIN LOOP
-RunService.RenderStepped:Connect(function()
+-- LOGIC LOOPS
+Mouse.Button1Down:Connect(function() if Settings.ClickTP and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(Mouse.Hit.p + Vector3.new(0, 3, 0)) end end)
+
+local SpamDelay = 0
+RunService.RenderStepped:Connect(function(deltaTime)
     local Char = LocalPlayer.Character
     if Char and Char:FindFirstChild("Humanoid") and Char:FindFirstChild("HumanoidRootPart") then
+        local Root = Char.HumanoidRootPart
+        -- Speed/Jump Logic
         if Settings.Speed then Char.Humanoid.WalkSpeed = Settings.SpeedVal end
         if Settings.HighJump then Char.Humanoid.JumpPower = Settings.HighJumpVal; Char.Humanoid.UseJumpPower = true end
-        if Settings.SpinBot then Char.HumanoidRootPart.CFrame = Char.HumanoidRootPart.CFrame * CFrame.Angles(0, math.rad(30), 0) end
+        if Settings.SpinBot then Root.CFrame = Root.CFrame * CFrame.Angles(0, math.rad(30), 0) end
         if Settings.BHop and Char.Humanoid.FloorMaterial ~= Enum.Material.Air then Char.Humanoid.Jump = true end
+        
+        -- Misc: Spider
+        if Settings.Spider then
+            local ray = Ray.new(Root.Position, Root.CFrame.LookVector * 2)
+            local hit, pos = workspace:FindPartOnRay(ray, Char)
+            if hit then Root.Velocity = Vector3.new(Root.Velocity.X, 40, Root.Velocity.Z) end
+        end
     end
+
+    -- Misc: Chat Spam
+    if Settings.ChatSpam then
+        SpamDelay = SpamDelay + deltaTime
+        if SpamDelay >= 2 then
+            SpamDelay = 0
+            pcall(function()
+                game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(Settings.ChatMsg, "All")
+            end)
+        end
+    end
+
     if Settings.NoFall and Char and Char:FindFirstChild("Humanoid") then Char.Humanoid:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false); Char.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false) end
     if Settings.Fullbright then Lighting.Brightness=2; Lighting.ClockTime=14; Lighting.GlobalShadows=false end
     if Settings.Hitbox then for _, p in pairs(Players:GetPlayers()) do if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(20,20,20); p.Character.HumanoidRootPart.Transparency=0.5; p.Character.HumanoidRootPart.CanCollide=false end end end
     if Settings.CamLock then local target=nil; local maxDist=math.huge; for _,p in pairs(Players:GetPlayers()) do if p~=LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then local dist=(LocalPlayer.Character.HumanoidRootPart.Position-p.Character.HumanoidRootPart.Position).Magnitude; if dist<maxDist then maxDist=dist; target=p end end end; Settings.Target=target; if Settings.Target and Settings.Target.Character then Camera.CFrame=CFrame.new(Camera.CFrame.Position, Settings.Target.Character.HumanoidRootPart.Position) end end
     
     if StatusGroup.Visible then
-        local diff = tick() - JoinTime
-        local h = math.floor(diff/3600); local m = math.floor((diff%3600)/60); local s = math.floor(diff%60)
-        s_SrvTime.Text = string.format("Server Time: %02d:%02d:%02d", h, m, s)
-        s_Time.Text = "Time: " .. os.date("%H:%M:%S")
-        s_Date.Text = "Date: " .. os.date("%d/%m/%Y")
+        local diff = tick() - JoinTime; local h = math.floor(diff/3600); local m = math.floor((diff%3600)/60); local s = math.floor(diff%60)
+        s_SrvTime.Text = string.format("Server Time: %02d:%02d:%02d", h, m, s); s_Time.Text = "Time: " .. os.date("%H:%M:%S"); s_Date.Text = "Date: " .. os.date("%d/%m/%Y")
         if Char and Char:FindFirstChild("Humanoid") then s_HP.Text = "Health: " .. math.floor(Char.Humanoid.Health) .. "/" .. math.floor(Char.Humanoid.MaxHealth) end
         if Char and Char:FindFirstChild("HumanoidRootPart") then local pos=Char.HumanoidRootPart.Position; s_Pos.Text=string.format("Pos: %d, %d, %d", pos.X, pos.Y, pos.Z) end
     end
@@ -273,7 +282,11 @@ end)
 
 local function PlayIntro()
     local IntroLabel = Instance.new("TextLabel", ScreenGui); IntroLabel.Text="LX"; IntroLabel.Font=Enum.Font.GothamBlack; IntroLabel.TextSize=120; IntroLabel.TextColor3=Color3.new(1,1,1); IntroLabel.Size=UDim2.new(0,300,0,150); IntroLabel.Position=UDim2.new(0.5,-150,0.5,-75); IntroLabel.TextTransparency=1; IntroLabel.BackgroundTransparency=1
+    
+    -- EFEITO ROXO (GLOW VIGNETTE)
+    local IntroGlow = Instance.new("ImageLabel", ScreenGui); IntroGlow.Name="IntroGlow"; IntroGlow.Size=UDim2.new(1,0,1,0); IntroGlow.BackgroundTransparency=1; IntroGlow.Image="rbxassetid://4576475446"; IntroGlow.ImageColor3=Color3.fromRGB(120,0,255); IntroGlow.ImageTransparency=0; IntroGlow.ZIndex=100
+
     TweenService:Create(IntroLabel, TweenInfo.new(1.5), {TextTransparency=0}):Play(); TweenService:Create(GlobalBlur, TweenInfo.new(1.5), {Size=56}):Play(); task.wait(2)
-    TweenService:Create(IntroLabel, TweenInfo.new(0.8), {TextTransparency=1}):Play(); task.wait(0.8); IntroLabel:Destroy(); OpenBtn.Visible=true; ToggleMenu()
+    TweenService:Create(IntroLabel, TweenInfo.new(0.8), {TextTransparency=1}):Play(); TweenService:Create(IntroGlow, TweenInfo.new(0.8), {ImageTransparency=1}):Play(); task.wait(0.8); IntroLabel:Destroy(); IntroGlow:Destroy(); OpenBtn.Visible=true; ToggleMenu()
 end
 PlayIntro()
