@@ -24,14 +24,22 @@ local Settings = {
     Spider = false, ChatSpam = false, ChatMsg = "Lux Hub on Top!"
 }
 
+-- CORES DARK (V2.6)
 local Colors = {
-	MainBG = Color3.fromRGB(60, 30, 100), Sidebar = Color3.fromRGB(45, 20, 80), ItemBG = Color3.fromRGB(50, 25, 90),
-	ToggleOff = Color3.fromRGB(30, 30, 30), ToggleOn = Color3.fromRGB(255, 255, 255), Text = Color3.fromRGB(200, 200, 200),
-	TextSelected = Color3.fromRGB(255, 255, 255), Accent = Color3.fromRGB(160, 100, 255), TargetPurple = Color3.fromRGB(130, 0, 255), CloseBtn = Color3.fromRGB(80, 0, 120)
+	MainBG = Color3.fromRGB(10, 10, 10),        -- Preto Quase Puro
+	Sidebar = Color3.fromRGB(5, 5, 5),          -- Preto Puro
+	ItemBG = Color3.fromRGB(25, 25, 25),        -- Cinza Chumbo
+	ToggleOff = Color3.fromRGB(40, 40, 40),     -- Cinza Escuro
+	ToggleOn = Color3.fromRGB(255, 255, 255),   -- Branco
+	Text = Color3.fromRGB(240, 240, 240),       -- Texto Branco
+	TextSelected = Color3.fromRGB(255, 255, 255),
+	Accent = Color3.fromRGB(120, 80, 255),      -- Roxo Neon
+	TargetPurple = Color3.fromRGB(130, 0, 255),
+	CloseBtn = Color3.fromRGB(30, 30, 30)       -- Cinza Escuro (Combina com o script)
 }
 
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "LuxHub_v2.5_SidebarFix"
+ScreenGui.Name = "LuxHub_v2.6_DexIY"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
 ScreenGui.IgnoreGuiInset = true 
@@ -54,6 +62,7 @@ end
 local GlobalBlur = Instance.new("BlurEffect", Lighting); GlobalBlur.Size = 0
 
 -- UI SETUP
+-- BOTÃO LX CLÁSSICO
 local OpenBtn = Instance.new("TextButton", ScreenGui); OpenBtn.Size=UDim2.new(0,55,0,55); OpenBtn.Position=UDim2.new(0,5,0.25,0); OpenBtn.BackgroundColor3=Colors.MainBG; OpenBtn.Text="LX"; OpenBtn.Font=Enum.Font.GothamBlack; OpenBtn.TextSize=28; OpenBtn.TextColor3=Color3.new(1,1,1); OpenBtn.Visible=false; OpenBtn.ZIndex=10; Instance.new("UICorner", OpenBtn).CornerRadius=UDim.new(1,0); MakeDraggable(OpenBtn)
 
 local MainFrame = Instance.new("Frame", ScreenGui); MainFrame.Name="MainFrame"; MainFrame.Size=UDim2.new(0,480,0,280); MainFrame.Position=UDim2.new(0.5,-240,1.5,0); MainFrame.BackgroundColor3=Colors.MainBG; MainFrame.Visible=false; MainFrame.ClipsDescendants=true; MainFrame.ZIndex=5; Instance.new("UICorner", MainFrame).CornerRadius=UDim.new(0,20)
@@ -67,11 +76,13 @@ OpenBtn.MouseButton1Click:Connect(ToggleMenu)
 
 local Sidebar = Instance.new("Frame", MainFrame); Sidebar.Size=UDim2.new(0,130,1,0); Sidebar.BackgroundColor3=Colors.Sidebar; Sidebar.ZIndex=6; Instance.new("UICorner", Sidebar).CornerRadius=UDim.new(0,20)
 local Title = Instance.new("TextLabel", Sidebar); Title.Text="Lux Hub"; Title.Font=Enum.Font.GothamBold; Title.TextSize=22; Title.TextColor3=Colors.TextSelected; Title.Size=UDim2.new(1,0,0,30); Title.Position=UDim2.new(0,0,0,20); Title.BackgroundTransparency=1; Title.ZIndex=7
-local SubVer = Instance.new("TextLabel", Sidebar); SubVer.Text="V2.5"; SubVer.Font=Enum.Font.Gotham; SubVer.TextSize=12; SubVer.TextColor3=Color3.fromRGB(180,180,180); SubVer.Size=UDim2.new(1,0,0,20); SubVer.Position=UDim2.new(0,0,0,45); SubVer.BackgroundTransparency=1; SubVer.ZIndex=7
+local SubVer = Instance.new("TextLabel", Sidebar); SubVer.Text="V2.6"; SubVer.Font=Enum.Font.Gotham; SubVer.TextSize=12; SubVer.TextColor3=Color3.fromRGB(150,150,150); SubVer.Size=UDim2.new(1,0,0,20); SubVer.Position=UDim2.new(0,0,0,45); SubVer.BackgroundTransparency=1; SubVer.ZIndex=7
 
 local DragFrame = Instance.new("Frame", MainFrame); DragFrame.Size=UDim2.new(1,-130,0,35); DragFrame.Position=UDim2.new(0,130,0,0); DragFrame.BackgroundTransparency=1; DragFrame.ZIndex=10; MakeDraggable(DragFrame, MainFrame)
 local PageTitle = Instance.new("TextLabel", MainFrame); PageTitle.Text="Main"; PageTitle.Font=Enum.Font.GothamBold; PageTitle.TextSize=20; PageTitle.TextColor3=Colors.TextSelected; PageTitle.Size=UDim2.new(1,-170,0,35); PageTitle.Position=UDim2.new(0,130,0,0); PageTitle.BackgroundTransparency=1; PageTitle.ZIndex=7
-local CloseBtn = Instance.new("TextButton", MainFrame); CloseBtn.Size=UDim2.new(0,30,0,30); CloseBtn.Position=UDim2.new(1,-40,0,5); CloseBtn.BackgroundColor3=Colors.CloseBtn; CloseBtn.Text="X"; CloseBtn.Font=Enum.Font.GothamBold; CloseBtn.TextColor3=Color3.new(1,1,1); CloseBtn.ZIndex=10; Instance.new("UICorner", CloseBtn).CornerRadius=UDim.new(1,0); CloseBtn.MouseButton1Click:Connect(function() if isOpen then ToggleMenu() end end)
+
+-- Botão FECHAR (X) com cor do tema
+local CloseBtn = Instance.new("TextButton", MainFrame); CloseBtn.Size=UDim2.new(0,30,0,30); CloseBtn.Position=UDim2.new(1,-40,0,5); CloseBtn.BackgroundColor3=Colors.CloseBtn; CloseBtn.Text="X"; CloseBtn.Font=Enum.Font.GothamBold; CloseBtn.TextSize=22; CloseBtn.TextColor3=Color3.new(1,1,1); CloseBtn.ZIndex=10; Instance.new("UICorner", CloseBtn).CornerRadius=UDim.new(1,0); CloseBtn.MouseButton1Click:Connect(function() if isOpen then ToggleMenu() end end)
 
 local PageContainer = Instance.new("Frame", MainFrame); PageContainer.Size=UDim2.new(1,-140,1,-40); PageContainer.Position=UDim2.new(0,140,0,40); PageContainer.BackgroundTransparency=1; PageContainer.ZIndex=6
 
@@ -90,25 +101,10 @@ local MiscGroup = Instance.new("CanvasGroup", PageContainer); MiscGroup.Size=UDi
 local StatusGroup = Instance.new("Frame", PageContainer); StatusGroup.Size=UDim2.new(1,0,1,0); StatusGroup.BackgroundTransparency=1; StatusGroup.ZIndex=6; StatusGroup.Visible=false; local StatusPage = CreateScrollingPage(StatusGroup)
 local ServerGroup = Instance.new("Frame", PageContainer); ServerGroup.Size=UDim2.new(1,0,1,0); ServerGroup.BackgroundTransparency=1; ServerGroup.ZIndex=6; ServerGroup.Visible=false; local ServerPage = CreateScrollingPage(ServerGroup)
 
--- SIDEBAR SCROLL (FIXED CENTERED)
-local TabContainer = Instance.new("ScrollingFrame", Sidebar)
-TabContainer.Position = UDim2.new(0, 0, 0, 80) -- Full width
-TabContainer.Size = UDim2.new(1, 0, 1, -90)
-TabContainer.BackgroundTransparency = 1
-TabContainer.ZIndex = 7
-TabContainer.ScrollBarThickness = 2
-TabContainer.ScrollBarImageColor3 = Colors.Accent
-TabContainer.AutomaticCanvasSize = Enum.AutomaticSize.Y
-TabContainer.CanvasSize = UDim2.new(0,0,0,0)
-
-local TabListLayout = Instance.new("UIListLayout", TabContainer)
-TabListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center -- CENTRALIZA OS BOTÕES
-TabListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-TabListLayout.Padding = UDim.new(0, 8)
-
-local TabPadding = Instance.new("UIPadding", TabContainer)
-TabPadding.PaddingTop = UDim.new(0, 5)
-TabPadding.PaddingBottom = UDim.new(0, 5)
+-- SIDEBAR SCROLL (CENTERED)
+local TabContainer = Instance.new("ScrollingFrame", Sidebar); TabContainer.Position = UDim2.new(0, 0, 0, 80); TabContainer.Size = UDim2.new(1, 0, 1, -90); TabContainer.BackgroundTransparency = 1; TabContainer.ZIndex = 7; TabContainer.ScrollBarThickness = 2; TabContainer.ScrollBarImageColor3 = Colors.Accent; TabContainer.AutomaticCanvasSize = Enum.AutomaticSize.Y; TabContainer.CanvasSize = UDim2.new(0,0,0,0)
+local TabListLayout = Instance.new("UIListLayout", TabContainer); TabListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center; TabListLayout.SortOrder = Enum.SortOrder.LayoutOrder; TabListLayout.Padding = UDim.new(0, 8)
+local TabPadding = Instance.new("UIPadding", TabContainer); TabPadding.PaddingTop = UDim.new(0, 5); TabPadding.PaddingBottom = UDim.new(0, 5)
 
 local TabButtons={}; local CurrentPage=MainGroup
 local function SwitchTab(btn, newPage)
@@ -120,7 +116,6 @@ local function SwitchTab(btn, newPage)
     CurrentPage.Visible=false; newPage.Visible=true; CurrentPage=newPage
 end
 local function CreateTab(name, page)
-    -- BOTÃO MENOR (0.85) PARA NÃO CORTAR
 	local Btn = Instance.new("TextButton", TabContainer); Btn.Size=UDim2.new(0.85,0,0,35); Btn.BackgroundColor3=Color3.new(1,1,1); Btn.BackgroundTransparency=0.9; Btn.Text=name; Btn.Font=Enum.Font.GothamBold; Btn.TextSize=16; Btn.TextColor3=Colors.Text; Btn.ZIndex=8; Instance.new("UICorner", Btn).CornerRadius=UDim.new(0,8)
     TabButtons[name]=Btn; Btn.MouseButton1Click:Connect(function() SwitchTab(Btn, page) end)
 end
@@ -151,6 +146,11 @@ local function AddTextBox(placeholder, parent, callback)
     local F = Instance.new("Frame", parent); F.Size=UDim2.new(1,-10,0,40); F.BackgroundColor3=Colors.ItemBG; F.ZIndex=6; Instance.new("UICorner", F).CornerRadius=UDim.new(0,10)
     local T = Instance.new("TextBox", F); T.Size=UDim2.new(1,-20,1,0); T.Position=UDim2.new(0,10,0,0); T.BackgroundTransparency=1; T.Text=""; T.PlaceholderText=placeholder; T.TextColor3=Colors.Text; T.PlaceholderColor3=Color3.fromRGB(150,150,150); T.Font=Enum.Font.GothamBold; T.TextSize=16; T.ZIndex=7
     T.FocusLost:Connect(function(enter) if enter then callback(T.Text) end end)
+end
+
+local function AddButton(text, parent, callback)
+    local B = Instance.new("TextButton", parent); B.Size=UDim2.new(1,-10,0,40); B.BackgroundColor3=Colors.ItemBG; B.Text=text; B.TextColor3=Colors.Text; B.Font=Enum.Font.GothamBold; B.TextSize=17; B.ZIndex=6; Instance.new("UICorner", B).CornerRadius=UDim.new(0,10)
+    B.MouseButton1Click:Connect(callback)
 end
 
 local function AddLabel(text, parent)
@@ -205,8 +205,9 @@ AddToggle("Invisible", PlayerPage, function(v) Settings.Invisible=v; if LocalPla
 AddToggle("Anti-AFK", PlayerPage, function(v) Settings.AntiAFK=v; if v then LocalPlayer.Idled:Connect(function() if Settings.AntiAFK then VirtualUser:Button2Down(Vector2.new(0,0)); VirtualUser:Button2Up(Vector2.new(0,0)) end end) end end)
 AddTpSystem(PlayerPage)
 
--- MISC PAGE CONTENT
-AddLabel("Fling: Em Breve...", MiscPage)
+-- MISC PAGE CONTENT (ATUALIZADA)
+AddButton("Infinite Yield (Admin)", MiscPage, function() loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))() end)
+AddButton("Dex Explorer (Files)", MiscPage, function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Babyhamsta/RBLX_Scripts/main/Universal/BypassedDarkDexV3.lua", true))() end)
 AddToggle("Spider (Walk on Walls)", MiscPage, function(v) Settings.Spider = v end)
 AddTextBox("Chat Message...", MiscPage, function(text) Settings.ChatMsg = text end)
 AddToggle("Auto Chat Spammer", MiscPage, function(v) Settings.ChatSpam = v end)
