@@ -21,21 +21,24 @@ local Settings = {
 local Colors = {
 	MainBG = Color3.fromRGB(15, 15, 15),
 	ItemBG = Color3.fromRGB(30, 30, 30),
-	ToggleOff = Color3.fromRGB(45, 45, 45),
-	ToggleOn = Color3.fromRGB(255, 255, 255),
-	Text = Color3.fromRGB(240, 240, 240), -- Branco (Visível)
+	Text = Color3.fromRGB(240, 240, 240),
 	
-    -- Cores das Abas
+    -- Toggle Colors (Verde Musgo Escuro - Mantido)
+    ToggleOff = Color3.fromRGB(70, 70, 70),
+    ToggleOn = Color3.fromRGB(0, 100, 40),
+    Knob = Color3.fromRGB(230, 230, 230),
+    
+    -- Tabs
     TabUnselected = Color3.fromRGB(35, 35, 35),
     TextDim = Color3.fromRGB(150, 150, 150),
     TabSelected = Color3.fromRGB(255, 255, 255),
-    TextSelected = Color3.fromRGB(0, 0, 0), -- Preto (Apenas para abas selecionadas)
+    TextSelected = Color3.fromRGB(0, 0, 0),
 	
     CloseBtn = Color3.fromRGB(40, 40, 40)
 }
 
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "LuxHub_v2.7.1"
+ScreenGui.Name = "LuxHub_v2.8_Final"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.IgnoreGuiInset = true 
 if gethui then ScreenGui.Parent = gethui() elseif game:GetService("CoreGui") then ScreenGui.Parent = game:GetService("CoreGui") else ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
@@ -65,7 +68,7 @@ end
 -- BLUR
 local GlobalBlur = Instance.new("BlurEffect", Lighting); GlobalBlur.Size = 0
 
--- OPEN BUTTON
+-- OPEN BUTTON (VOLTOU AO ORIGINAL - TEXTO)
 local OpenBtn = Instance.new("TextButton", ScreenGui)
 OpenBtn.Size = UDim2.new(0, 50, 0, 50)
 OpenBtn.Position = UDim2.new(0, 10, 0.2, 0)
@@ -90,7 +93,7 @@ MainFrame.ZIndex = 5
 MainFrame.ClipsDescendants = true 
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 24)
 
--- TOGGLE
+-- TOGGLE MENU
 local isOpen = false
 local function ToggleMenu()
     if isOpen then
@@ -120,14 +123,14 @@ Title.Font = Enum.Font.GothamBlack
 Title.TextSize = 22
 Title.TextColor3 = Colors.Text
 Title.Size = UDim2.new(0, 100, 1, 0)
-Title.Position = UDim2.new(0, 20, 0, 0)
+Title.Position = UDim2.new(0, 20, 0, 0) -- Voltou para a posição original
 Title.BackgroundTransparency = 1
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.ZIndex = 7
 
--- VERSÃO (v2.7.1)
+-- VERSÃO (v2.8)
 local VerLabel = Instance.new("TextLabel", Header)
-VerLabel.Text = "v2.7.1"
+VerLabel.Text = "v2.8"
 VerLabel.Font = Enum.Font.GothamBold
 VerLabel.TextSize = 12
 VerLabel.TextColor3 = Colors.TextDim
@@ -250,49 +253,55 @@ local ServerTab = AddTab("Server", ServerPage)
 MainTab.BackgroundColor3 = Colors.TabSelected
 MainTab.TextColor3 = Colors.TextSelected
 
--- UI COMPONENTS
+-- UI COMPONENTS - TOGGLE SWITCH (Verde Escuro)
 local function AddToggle(text, parent, callback)
-	local F = Instance.new("Frame", parent); F.BackgroundColor3=Colors.ItemBG; F.ZIndex=6; Instance.new("UICorner", F).CornerRadius=UDim.new(0,10)
-	local L = Instance.new("TextLabel", F); L.Text=text; L.Font=Enum.Font.GothamBold; L.TextSize=14; L.TextColor3=Colors.Text; L.TextXAlignment=0; L.Position=UDim2.new(0,12,0,0); L.Size=UDim2.new(0.65,0,1,0); L.BackgroundTransparency=1; L.ZIndex=7
-	local B = Instance.new("TextButton", F); B.Text=""; B.Size=UDim2.new(0,20,0,20); B.Position=UDim2.new(1,-25,0.5,-10); B.BackgroundColor3=Colors.ToggleOff; B.ZIndex=7; Instance.new("UICorner", B).CornerRadius=UDim.new(1,0)
-	local s=false; B.MouseButton1Click:Connect(function() s=not s; TweenService:Create(B, TweenInfo.new(0.2), {BackgroundColor3=s and Colors.ToggleOn or Colors.ToggleOff}):Play(); callback(s) end)
+	local F = Instance.new("Frame", parent)
+    F.BackgroundColor3 = Colors.ItemBG
+    F.ZIndex = 6
+    Instance.new("UICorner", F).CornerRadius = UDim.new(0, 10)
+    
+	local L = Instance.new("TextLabel", F)
+    L.Text = text; L.Font = Enum.Font.GothamBold; L.TextSize = 14; L.TextColor3 = Colors.Text; L.TextXAlignment = Enum.TextXAlignment.Left; L.Position = UDim2.new(0, 12, 0, 0); L.Size = UDim2.new(0.65, 0, 1, 0); L.BackgroundTransparency = 1; L.ZIndex = 7
+
+    local SwitchBG = Instance.new("TextButton", F)
+    SwitchBG.Text = ""; SwitchBG.Size = UDim2.new(0, 42, 0, 22); SwitchBG.Position = UDim2.new(1, -52, 0.5, -11); SwitchBG.BackgroundColor3 = Colors.ToggleOff; SwitchBG.ZIndex = 7; Instance.new("UICorner", SwitchBG).CornerRadius = UDim.new(1, 0)
+    
+    local Knob = Instance.new("Frame", SwitchBG)
+    Knob.Size = UDim2.new(0, 18, 0, 18); Knob.Position = UDim2.new(0, 2, 0.5, -9); Knob.BackgroundColor3 = Colors.Knob; Knob.ZIndex = 8; Instance.new("UICorner", Knob).CornerRadius = UDim.new(1, 0)
+    
+	local enabled = false
+	SwitchBG.MouseButton1Click:Connect(function() 
+        enabled = not enabled
+        if enabled then
+            TweenService:Create(SwitchBG, TweenInfo.new(0.2), {BackgroundColor3 = Colors.ToggleOn}):Play()
+            TweenService:Create(Knob, TweenInfo.new(0.2), {Position = UDim2.new(1, -20, 0.5, -9)}):Play()
+        else
+            TweenService:Create(SwitchBG, TweenInfo.new(0.2), {BackgroundColor3 = Colors.ToggleOff}):Play()
+            TweenService:Create(Knob, TweenInfo.new(0.2), {Position = UDim2.new(0, 2, 0.5, -9)}):Play()
+        end
+        callback(enabled) 
+    end)
 end
 
--- SLIDER (FIXED TEXT COLOR)
+-- SLIDER (Botões Círculo Perfeito 36px)
 local function AddSlider(text, parent, min, max, callback, default)
     local current=default or min
     local F = Instance.new("Frame", parent); F.BackgroundColor3=Colors.ItemBG; F.ZIndex=6; Instance.new("UICorner", F).CornerRadius=UDim.new(0,10)
     
     local L = Instance.new("TextLabel", F); L.Text=text; L.Font=Enum.Font.GothamBold; L.TextSize=14; L.TextColor3=Colors.Text; L.TextXAlignment=0; L.Position=UDim2.new(0,10,0,0); L.Size=UDim2.new(0.35,0,1,0); L.BackgroundTransparency=1; L.ZIndex=7
     
-    local M = Instance.new("TextButton", F); M.Text="-"; M.Size=UDim2.new(0,35,0,35); M.Position=UDim2.new(0.38,0,0.5,-17.5); M.BackgroundColor3=Colors.MainBG; M.TextColor3=Colors.Text; M.ZIndex=7; Instance.new("UICorner", M).CornerRadius=UDim.new(0,8)
+    -- Botão "-" (Redondo 36px)
+    local M = Instance.new("TextButton", F); M.Text="-"; M.Size=UDim2.new(0,36,0,36); M.Position=UDim2.new(0.40,0,0.5,-18); M.BackgroundColor3=Colors.MainBG; M.TextColor3=Colors.Text; M.ZIndex=7; Instance.new("UICorner", M).CornerRadius=UDim.new(1,0)
     
-    -- INPUT: CORRIGIDO PARA Colors.Text (BRANCO)
-    local V = Instance.new("TextBox", F); 
-    V.Text=tostring(current); 
-    V.Size=UDim2.new(0,40,1,0); 
-    V.Position=UDim2.new(0.55,0,0,0); 
-    V.BackgroundTransparency=1; 
-    V.TextColor3=Colors.Text; -- AGORA É BRANCO!
-    V.Font=Enum.Font.GothamBold; 
-    V.ZIndex=7; 
-    V.ClearTextOnFocus = false
+    local V = Instance.new("TextBox", F); V.Text=tostring(current); V.Size=UDim2.new(0,40,1,0); V.Position=UDim2.new(0.58,0,0,0); V.BackgroundTransparency=1; V.TextColor3=Colors.Text; V.Font=Enum.Font.GothamBold; V.ZIndex=7; V.ClearTextOnFocus = false
     
-    local P = Instance.new("TextButton", F); P.Text="+"; P.Size=UDim2.new(0,35,0,35); P.Position=UDim2.new(0.78,0,0.5,-17.5); P.BackgroundColor3=Colors.MainBG; P.TextColor3=Colors.Text; P.ZIndex=7; Instance.new("UICorner", P).CornerRadius=UDim.new(0,8)
+    -- Botão "+" (Redondo 36px)
+    local P = Instance.new("TextButton", F); P.Text="+"; P.Size=UDim2.new(0,36,0,36); P.Position=UDim2.new(0.80,0,0.5,-18); P.BackgroundColor3=Colors.MainBG; P.TextColor3=Colors.Text; P.ZIndex=7; Instance.new("UICorner", P).CornerRadius=UDim.new(1,0)
     
-    local function Update() 
-        current = math.clamp(current, min, max)
-        V.Text = tostring(current)
-        callback(current) 
-    end
-    
+    local function Update() current = math.clamp(current, min, max); V.Text = tostring(current); callback(current) end
     M.MouseButton1Click:Connect(function() current=current-10; if current < min then current = min end; Update() end)
     P.MouseButton1Click:Connect(function() current=current+10; if current > max then current = max end; Update() end)
-    
-    V.FocusLost:Connect(function(enter)
-        local num = tonumber(V.Text)
-        if num then current = num; Update() else V.Text = tostring(current) end
-    end)
+    V.FocusLost:Connect(function(enter) local num = tonumber(V.Text); if num then current = num; Update() else V.Text = tostring(current) end end)
 end
 
 local function AddButton(text, parent, callback)
@@ -307,6 +316,22 @@ local function AddTextBox(placeholder, parent, callback)
 end
 
 -- --- FEATURES ---
+
+-- ESP FUNCTION (CORRIGIDO)
+local function UpdateESP()
+    for _, player in pairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character then
+            if Settings.ESP then
+                if not player.Character:FindFirstChild("LuxHighlight") then
+                    local hl = Instance.new("Highlight"); hl.Name = "LuxHighlight"; hl.FillColor = Color3.fromRGB(255, 0, 0); hl.OutlineColor = Color3.fromRGB(255, 255, 255); hl.FillTransparency = 0.5; hl.OutlineTransparency = 0; hl.Parent = player.Character
+                end
+            else
+                if player.Character:FindFirstChild("LuxHighlight") then player.Character.LuxHighlight:Destroy() end
+            end
+        end
+    end
+end
+RunService.Stepped:Connect(UpdateESP)
 
 -- MAIN
 AddToggle("ESP", MainPage, function(v) Settings.ESP = v end)
@@ -333,10 +358,10 @@ AddToggle("Click TP", PlayerPage, function(v) Settings.ClickTP = v end)
 -- MISC
 AddButton("Inf Yield", MiscPage, function() loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))() end)
 AddButton("Dex Files", MiscPage, function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Babyhamsta/RBLX_Scripts/main/Universal/BypassedDarkDexV3.lua", true))() end)
-AddToggle("Spider", MiscPage, function(v) Settings.Spider = v end)
-AddToggle("Anti-AFK", MiscPage, function(v) Settings.AntiAFK = v end)
 AddTextBox("Chat Msg...", MiscPage, function(t) Settings.ChatMsg = t end)
 AddToggle("Spam Chat", MiscPage, function(v) Settings.ChatSpam = v end)
+AddToggle("Spider", MiscPage, function(v) Settings.Spider = v end)
+AddToggle("Anti-AFK", MiscPage, function(v) Settings.AntiAFK = v end)
 
 -- SERVER
 AddButton("Rejoin", ServerPage, function() TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer) end)
@@ -402,96 +427,106 @@ task.spawn(function()
     end
 end)
 
--- GAME LOOPS
-RunService.RenderStepped:Connect(function()
+-- INFINITE JUMP FIX (PROPER METHOD)
+UserInputService.JumpRequest:Connect(function()
+    if Settings.InfiniteJump then
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+        end
+    end
+end)
+
+-- PHYSICS LOOP (Noclip Fix, Fly, Speed)
+RunService.Stepped:Connect(function()
     local Char = LocalPlayer.Character
-    if Char and Char:FindFirstChild("Humanoid") then
-        local Hum = Char.Humanoid
+    if Char then
+        local Hum = Char:FindFirstChild("Humanoid")
         local Root = Char:FindFirstChild("HumanoidRootPart")
         
-        if Settings.Speed then Hum.WalkSpeed = Settings.SpeedVal end
-        if Settings.HighJump then Hum.JumpPower = Settings.HighJumpVal; Hum.UseJumpPower = true end
-        if Settings.Fullbright then Lighting.Brightness=2; Lighting.ClockTime=14; Lighting.GlobalShadows=false end
-
-        if Settings.Fly and Root then
-            local bv = Root:FindFirstChild("LuxFlyVelo") or Instance.new("BodyVelocity", Root)
-            bv.Name = "LuxFlyVelo"; bv.MaxForce = Vector3.new(1e5,1e5,1e5)
-            local bg = Root:FindFirstChild("LuxFlyGyro") or Instance.new("BodyGyro", Root)
-            bg.Name = "LuxFlyGyro"; bg.MaxTorque = Vector3.new(1e5,1e5,1e5); bg.P = 10000; bg.D = 100
-            Hum.PlatformStand = true
-            bg.CFrame = Camera.CFrame
-            local dir = Hum.MoveDirection
-            if dir.Magnitude > 0.1 then
-               bv.Velocity = (Camera.CFrame.LookVector * (dir.Z * -1) + Camera.CFrame.RightVector * dir.X) * Settings.SpeedVal
-            else
-               bv.Velocity = Vector3.zero
+        -- Noclip Logic (FIXED)
+        if Settings.Noclip then
+            for _, part in pairs(Char:GetDescendants()) do
+                if part:IsA("BasePart") and part.CanCollide then
+                    part.CanCollide = false
+                end
             end
-        else
-            if Root and Root:FindFirstChild("LuxFlyVelo") then Root.LuxFlyVelo:Destroy() end
-            if Root and Root:FindFirstChild("LuxFlyGyro") then Root.LuxFlyGyro:Destroy() end
-            Hum.PlatformStand = false
         end
 
-        if Settings.Spider and Root then
-            local ray = Ray.new(Root.Position, Root.CFrame.LookVector * 2)
-            local hit, _ = workspace:FindPartOnRay(ray, Char)
-            if hit then Root.Velocity = Vector3.new(Root.Velocity.X, 40, Root.Velocity.Z) end
+        if Hum and Root then
+            if Settings.Speed then Hum.WalkSpeed = Settings.SpeedVal end
+            if Settings.HighJump then Hum.JumpPower = Settings.HighJumpVal; Hum.UseJumpPower = true end
+            if Settings.Fullbright then Lighting.Brightness=2; Lighting.ClockTime=14; Lighting.GlobalShadows=false end
+
+            -- Fly (FIXED LOGIC)
+            if Settings.Fly and Root then
+                local bv = Root:FindFirstChild("LuxFlyVelo") or Instance.new("BodyVelocity", Root)
+                bv.Name = "LuxFlyVelo"; bv.MaxForce = Vector3.new(1e5,1e5,1e5)
+                local bg = Root:FindFirstChild("LuxFlyGyro") or Instance.new("BodyGyro", Root)
+                bg.Name = "LuxFlyGyro"; bg.MaxTorque = Vector3.new(1e5,1e5,1e5); bg.P = 10000; bg.D = 100
+                Hum.PlatformStand = true
+                bg.CFrame = Camera.CFrame
+                local dir = Hum.MoveDirection
+                if dir.Magnitude > 0.1 then
+                   bv.Velocity = (Camera.CFrame.LookVector * (dir.Z * -1) + Camera.CFrame.RightVector * dir.X) * Settings.SpeedVal
+                else
+                   bv.Velocity = Vector3.zero
+                end
+            else
+                if Root:FindFirstChild("LuxFlyVelo") then Root.LuxFlyVelo:Destroy() end
+                if Root:FindFirstChild("LuxFlyGyro") then Root.LuxFlyGyro:Destroy() end
+                if Hum.PlatformStand and Settings.Fly == false then Hum.PlatformStand = false end
+            end
+
+            -- CamLock
+            if Settings.CamLock then 
+                local target = nil
+                local maxDist = math.huge
+                for _, p in pairs(Players:GetPlayers()) do
+                    if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                        local dist = (LocalPlayer.Character.HumanoidRootPart.Position - p.Character.HumanoidRootPart.Position).Magnitude
+                        if dist < maxDist then maxDist = dist; target = p end
+                    end
+                end
+                if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+                    Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Character.HumanoidRootPart.Position)
+                    if Root then
+                        Hum.AutoRotate = false 
+                        local tPos = target.Character.HumanoidRootPart.Position
+                        Root.CFrame = CFrame.lookAt(Root.Position, Vector3.new(tPos.X, Root.Position.Y, tPos.Z))
+                    end
+                end
+            else
+                if Hum then Hum.AutoRotate = true end
+            end
         end
-        
-        if Settings.NoFall then Hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false); Hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false) end
-        if Settings.SpinBot and Root then Root.CFrame = Root.CFrame * CFrame.Angles(0, math.rad(30), 0) end
     end
     
     if Settings.Hitbox then for _, p in pairs(Players:GetPlayers()) do if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(20,20,20); p.Character.HumanoidRootPart.Transparency=0.5; p.Character.HumanoidRootPart.CanCollide=false end end end
-    if Settings.CamLock then local target=nil; local maxDist=math.huge; for _,p in pairs(Players:GetPlayers()) do if p~=LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then local dist=(LocalPlayer.Character.HumanoidRootPart.Position-p.Character.HumanoidRootPart.Position).Magnitude; if dist<maxDist then maxDist=dist; target=p end end end; if target and target.Character then Camera.CFrame=CFrame.new(Camera.CFrame.Position, target.Character.HumanoidRootPart.Position) end end
-
-    if Settings.ChatSpam and tick() % 2 < 0.1 then
-        pcall(function() game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(Settings.ChatMsg, "All") end)
-    end
     
     if Settings.AntiAFK and tick() % 60 < 1 then
         VirtualUser:Button2Down(Vector2.new(0,0)); VirtualUser:Button2Up(Vector2.new(0,0))
     end
-    
-    if Settings.InfiniteJump and UserInputService:IsKeyDown(Enum.KeyCode.Space) then
-        if Char and Char:FindFirstChild("Humanoid") then Char.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping) end
+end)
+
+RunService.RenderStepped:Connect(function()
+    if Settings.ChatSpam and tick() % 2 < 0.1 then
+        pcall(function() game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(Settings.ChatMsg, "All") end)
+    end
+    -- Spider (Visual/Physics hybrid)
+    if Settings.Spider and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        local Root = LocalPlayer.Character.HumanoidRootPart
+        local ray = Ray.new(Root.Position, Root.CFrame.LookVector * 2)
+        local hit, _ = workspace:FindPartOnRay(ray, LocalPlayer.Character)
+        if hit then Root.Velocity = Vector3.new(Root.Velocity.X, 40, Root.Velocity.Z) end
     end
 end)
 
 Mouse.Button1Down:Connect(function() if Settings.ClickTP and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(Mouse.Hit.p + Vector3.new(0, 3, 0)) end end)
 
--- INTRO
 local function PlayIntro()
-    local IntroLabel = Instance.new("TextLabel", ScreenGui)
-    IntroLabel.Text = "LX"
-    IntroLabel.Font = Enum.Font.GothamBlack
-    IntroLabel.TextSize = 120
-    IntroLabel.TextColor3 = Color3.new(1,1,1)
-    IntroLabel.Size = UDim2.new(1,0,1,0)
-    IntroLabel.Position = UDim2.new(0,0,0,0)
-    IntroLabel.BackgroundTransparency = 1
-    IntroLabel.ZIndex = 100
-    IntroLabel.TextTransparency = 1
-    
-    local IntroGlow = Instance.new("ImageLabel", ScreenGui)
-    IntroGlow.Name="IntroGlow"; IntroGlow.Size=UDim2.new(1,0,1,0); IntroGlow.BackgroundTransparency=1
-    IntroGlow.Image="rbxassetid://4576475446"; IntroGlow.ImageColor3=Color3.fromRGB(120,0,255); IntroGlow.ImageTransparency=1; IntroGlow.ZIndex=99
-
-    TweenService:Create(GlobalBlur, TweenInfo.new(1), {Size=24}):Play()
-
-    TweenService:Create(IntroLabel, TweenInfo.new(1), {TextTransparency=0}):Play()
-    TweenService:Create(IntroGlow, TweenInfo.new(1), {ImageTransparency=0}):Play()
-    task.wait(2)
-    TweenService:Create(IntroLabel, TweenInfo.new(0.5), {TextTransparency=1}):Play()
-    TweenService:Create(IntroGlow, TweenInfo.new(0.5), {ImageTransparency=1}):Play()
-    task.wait(0.5)
-    
-    TweenService:Create(GlobalBlur, TweenInfo.new(0.5), {Size=0}):Play()
-    
-    IntroLabel:Destroy()
-    IntroGlow:Destroy()
-    OpenBtn.Visible = true
-    ToggleMenu()
+    local IntroLabel = Instance.new("TextLabel", ScreenGui); IntroLabel.Text="LX"; IntroLabel.Font=Enum.Font.GothamBlack; IntroLabel.TextSize=120; IntroLabel.TextColor3=Color3.new(1,1,1); IntroLabel.Size=UDim2.new(1,0,1,0); IntroLabel.Position=UDim2.new(0,0,0,0); IntroLabel.BackgroundTransparency=1; IntroLabel.ZIndex=100; IntroLabel.TextTransparency=1
+    local IntroGlow = Instance.new("ImageLabel", ScreenGui); IntroGlow.Name="IntroGlow"; IntroGlow.Size=UDim2.new(1,0,1,0); IntroGlow.BackgroundTransparency=1; IntroGlow.Image="rbxassetid://4576475446"; IntroGlow.ImageColor3=Color3.fromRGB(120,0,255); IntroGlow.ImageTransparency=1; IntroGlow.ZIndex=99
+    TweenService:Create(GlobalBlur, TweenInfo.new(1), {Size=24}):Play(); TweenService:Create(IntroLabel, TweenInfo.new(1), {TextTransparency=0}):Play(); TweenService:Create(IntroGlow, TweenInfo.new(1), {ImageTransparency=0}):Play(); task.wait(2)
+    TweenService:Create(IntroLabel, TweenInfo.new(0.5), {TextTransparency=1}):Play(); TweenService:Create(IntroGlow, TweenInfo.new(0.5), {ImageTransparency=1}):Play(); task.wait(0.5); TweenService:Create(GlobalBlur, TweenInfo.new(0.5), {Size=0}):Play(); IntroLabel:Destroy(); IntroGlow:Destroy(); OpenBtn.Visible=true; ToggleMenu()
 end
-
 PlayIntro()
