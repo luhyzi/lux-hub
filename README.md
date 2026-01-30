@@ -8,27 +8,97 @@ local Lighting = game:GetService("Lighting")
 local LocalPlayer = Players.LocalPlayer
 local Camera = workspace.CurrentCamera
 local Mouse = LocalPlayer:GetMouse()
+local VirtualUser = game:GetService("VirtualUser")
 
--- Settings
+-- Settings & Data
 local Settings = {
-    ESP = false, Fullbright = false, FOV = 70, Hitbox = false, NoFog = false, Crosshair = false, CamLock = false, Target = nil,
+    ESP = false, NameTags = false, Tracers = false, Fullbright = false, FOV = 70, Hitbox = false, NoFog = false, Crosshair = false, CamLock = false,
     Noclip = false, Speed = false, SpeedVal = 100, Fly = false, Invisible = false, InfiniteJump = false, HighJump = false, HighJumpVal = 50,
-    ClickTP = false, SpinBot = false, AntiAFK = false, BHop = false, NoFall = false, TpTargetPlayer = nil,
-    Spider = false, ChatSpam = false, ChatMsg = "Lux Hub on Top!"
+    ClickTP = false, SpinBot = false, AntiAFK = false, BHop = false, NoFall = false, Spider = false,
+    AutoClick = false, -- NOVO
+    ChatSpam = false, ChatMsg = "Lux Hub on Top!",
+    
+    -- System Configs
+    ShowNotifs = true,
+    FPSBoost = false,
+    AutoExecute = false,
+    Translate = false
 }
 
--- Colors
+-- Target Variables
+local SelectedPlayer = nil
+local Spectating = false
+
+-- Dicionário de Tradução
+local Translations = {
+    -- Tabs
+    ["Main"] = "Principal",
+    ["Player"] = "Jogador",
+    ["Misc"] = "Outros",
+    ["Status"] = "Status",
+    ["Server"] = "Servidor",
+    ["Settings"] = "Ajustes",
+    
+    -- Main
+    ["ESP"] = "ESP Universal",
+    ["NameTags"] = "Nomes/Vida", -- NOVO
+    ["Tracers"] = "Linhas (Tracers)", -- NOVO
+    ["Fullbright"] = "Luz Infinita",
+    ["FOV"] = "Campo de Visão",
+    ["No Fog"] = "Sem Neblina",
+    ["Cam Lock"] = "Travar Câmera",
+    ["Hitbox"] = "Hitbox Expandida",
+    ["Crosshair"] = "Mira",
+    
+    -- Player
+    ["Speed"] = "Velocidade",
+    ["On Speed"] = "Ativar Velocidade",
+    ["Jump"] = "Pulo",
+    ["On Jump"] = "Ativar Pulo",
+    ["Fly"] = "Voar",
+    ["Noclip"] = "Atravessar Paredes",
+    ["Inf Jump"] = "Pulo Infinito",
+    ["No Fall"] = "Sem Dano Queda",
+    ["SpinBot"] = "Girar (Spin)",
+    ["Click TP"] = "TP ao Clicar",
+    ["Spider"] = "Homem Aranha",
+    ["Auto Clicker"] = "Auto Clicker", -- NOVO
+    ["Target Name..."] = "Nome do Jogador...", -- NOVO
+    ["Teleport to"] = "Teleportar", -- NOVO
+    ["Spectate"] = "Assistir (Spectate)", -- NOVO
+    ["Stop Spec"] = "Parar de Assistir", -- NOVO
+    
+    -- Misc
+    ["Inf Yield"] = "Infinite Yield",
+    ["Dex Files"] = "Dex Explorer",
+    ["Chat Msg..."] = "Msg Chat...",
+    ["Spam Chat"] = "Spam Chat",
+    
+    -- Settings
+    ["Show Notifs"] = "Notificações",
+    ["FPS Boost"] = "Aumentar FPS",
+    ["Anti-AFK"] = "Anti-AFK",
+    ["Auto Exec"] = "Auto Executar",
+    ["Translate PT-BR"] = "Traduzir PT-BR",
+    ["Unload Script"] = "Fechar Script",
+    
+    -- Server
+    ["Rejoin"] = "Reentrar",
+    ["Server Hop"] = "Trocar Server"
+}
+
+-- Armazena referências dos textos para tradução em tempo real
+local TextObjects = {} 
+
 local Colors = {
 	MainBG = Color3.fromRGB(15, 15, 15),
 	ItemBG = Color3.fromRGB(30, 30, 30),
 	Text = Color3.fromRGB(240, 240, 240),
 	
-    -- Toggle Colors (Verde Musgo Escuro - Mantido)
     ToggleOff = Color3.fromRGB(70, 70, 70),
     ToggleOn = Color3.fromRGB(0, 100, 40),
     Knob = Color3.fromRGB(230, 230, 230),
     
-    -- Tabs
     TabUnselected = Color3.fromRGB(35, 35, 35),
     TextDim = Color3.fromRGB(150, 150, 150),
     TabSelected = Color3.fromRGB(255, 255, 255),
@@ -38,10 +108,77 @@ local Colors = {
 }
 
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "LuxHub_v2.8_Final"
+ScreenGui.Name = "LuxHub_v2.9_Ultimate"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.IgnoreGuiInset = true 
 if gethui then ScreenGui.Parent = gethui() elseif game:GetService("CoreGui") then ScreenGui.Parent = game:GetService("CoreGui") else ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") end
+
+-- SISTEMA DE NOTIFICAÇÃO
+local NotifContainer = Instance.new("Frame", ScreenGui)
+NotifContainer.Name = "Notifications"
+NotifContainer.Size = UDim2.new(0, 300, 1, -20)
+NotifContainer.Position = UDim2.new(1, -310, 0, 10)
+NotifContainer.BackgroundTransparency = 1
+NotifContainer.ZIndex = 100
+
+local NotifList = Instance.new("UIListLayout", NotifContainer)
+NotifList.Padding = UDim.new(0, 5)
+NotifList.VerticalAlignment = Enum.VerticalAlignment.Bottom
+NotifList.HorizontalAlignment = Enum.HorizontalAlignment.Right
+
+local function SendNotification(text)
+    if not Settings.ShowNotifs then return end
+    
+    local N = Instance.new("Frame", NotifContainer)
+    N.Size = UDim2.new(0, 0, 0, 30)
+    N.BackgroundColor3 = Colors.ItemBG
+    N.BorderSizePixel = 0
+    N.ClipsDescendants = true
+    Instance.new("UICorner", N).CornerRadius = UDim.new(0, 6)
+    
+    local L = Instance.new("TextLabel", N)
+    L.Text = text
+    L.Font = Enum.Font.GothamBold
+    L.TextSize = 14
+    L.TextColor3 = Colors.Text
+    L.Size = UDim2.new(1, 0, 1, 0)
+    L.BackgroundTransparency = 1
+    
+    TweenService:Create(N, TweenInfo.new(0.3, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Size = UDim2.new(0, 200, 0, 30)}):Play()
+    
+    task.spawn(function()
+        task.wait(2.5)
+        TweenService:Create(L, TweenInfo.new(0.3), {TextTransparency = 1}):Play()
+        TweenService:Create(N, TweenInfo.new(0.3), {Size = UDim2.new(0, 0, 0, 30)}):Play()
+        task.wait(0.3)
+        N:Destroy()
+    end)
+end
+
+-- FUNÇÃO DE TRADUÇÃO
+local function UpdateLanguage()
+    for obj, originalText in pairs(TextObjects) do
+        if Settings.Translate then
+            if Translations[originalText] then
+                obj.Text = Translations[originalText]
+            end
+        else
+            obj.Text = originalText
+        end
+    end
+end
+
+-- GET PLAYER FUNCTION (Para TP e Spectate)
+local function GetPlayerFromShortName(str)
+    if not str then return nil end
+    str = string.lower(str)
+    for _, p in pairs(Players:GetPlayers()) do
+        if string.sub(string.lower(p.Name), 1, #str) == str or string.sub(string.lower(p.DisplayName), 1, #str) == str then
+            return p
+        end
+    end
+    return nil
+end
 
 -- DRAG LOGIC
 local LastPosition = UDim2.new(0.5, -250, 0.5, -165)
@@ -68,7 +205,7 @@ end
 -- BLUR
 local GlobalBlur = Instance.new("BlurEffect", Lighting); GlobalBlur.Size = 0
 
--- OPEN BUTTON (VOLTOU AO ORIGINAL - TEXTO)
+-- OPEN BUTTON
 local OpenBtn = Instance.new("TextButton", ScreenGui)
 OpenBtn.Size = UDim2.new(0, 50, 0, 50)
 OpenBtn.Position = UDim2.new(0, 10, 0.2, 0)
@@ -123,14 +260,14 @@ Title.Font = Enum.Font.GothamBlack
 Title.TextSize = 22
 Title.TextColor3 = Colors.Text
 Title.Size = UDim2.new(0, 100, 1, 0)
-Title.Position = UDim2.new(0, 20, 0, 0) -- Voltou para a posição original
+Title.Position = UDim2.new(0, 20, 0, 0)
 Title.BackgroundTransparency = 1
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.ZIndex = 7
 
--- VERSÃO (v2.8)
+-- VERSÃO (v2.9)
 local VerLabel = Instance.new("TextLabel", Header)
-VerLabel.Text = "v2.8"
+VerLabel.Text = "v2.9"
 VerLabel.Font = Enum.Font.GothamBold
 VerLabel.TextSize = 12
 VerLabel.TextColor3 = Colors.TextDim
@@ -152,7 +289,7 @@ CloseBtn.ZIndex = 7
 Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(1, 0)
 CloseBtn.MouseButton1Click:Connect(function() ToggleMenu() end)
 
--- NAVBAR
+-- NAVBAR (SCROLL HORIZONTAL)
 local NavBar = Instance.new("Frame", MainFrame)
 NavBar.Size = UDim2.new(1, 0, 0, 55)
 NavBar.Position = UDim2.new(0, 0, 1, -55)
@@ -163,14 +300,16 @@ local TabScroller = Instance.new("ScrollingFrame", NavBar)
 TabScroller.Size = UDim2.new(1, -20, 1, 0)
 TabScroller.Position = UDim2.new(0, 10, 0, 0)
 TabScroller.BackgroundTransparency = 1
-TabScroller.ScrollBarThickness = 0
+TabScroller.ScrollBarThickness = 2 
+TabScroller.ScrollBarImageColor3 = Colors.Knob
 TabScroller.CanvasSize = UDim2.new(0, 0, 0, 0)
-TabScroller.AutomaticCanvasSize = Enum.AutomaticSize.X
+TabScroller.AutomaticCanvasSize = Enum.AutomaticSize.X 
 TabScroller.ZIndex = 7
+TabScroller.ScrollingDirection = Enum.ScrollingDirection.X 
 
 local TabListLayout = Instance.new("UIListLayout", TabScroller)
 TabListLayout.FillDirection = Enum.FillDirection.Horizontal
-TabListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+TabListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left 
 TabListLayout.VerticalAlignment = Enum.VerticalAlignment.Center
 TabListLayout.Padding = UDim.new(0, 8)
 
@@ -213,6 +352,7 @@ local PlayerPage = CreatePage(false)
 local MiscPage = CreatePage(false)
 local StatusPage = CreatePage(false)
 local ServerPage = CreatePage(false)
+local SettingsPage = CreatePage(false)
 
 MainPage.Visible = true
 
@@ -238,9 +378,15 @@ local function AddTab(name, page)
     Btn.TextSize = 13
     Btn.TextColor3 = Colors.TextDim
     Btn.ZIndex = 8
+    Btn.ClipsDescendants = true 
     Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 10)
+    
     Btn.MouseButton1Click:Connect(function() SwitchTo(Btn, page) end)
     table.insert(Tabs, Btn)
+    
+    -- Registrar para tradução
+    TextObjects[Btn] = name
+    
     return Btn
 end
 
@@ -249,11 +395,12 @@ local PlayerTab = AddTab("Player", PlayerPage)
 local MiscTab = AddTab("Misc", MiscPage)
 local StatusTab = AddTab("Status", StatusPage)
 local ServerTab = AddTab("Server", ServerPage)
+local SettingsTab = AddTab("Settings", SettingsPage)
 
 MainTab.BackgroundColor3 = Colors.TabSelected
 MainTab.TextColor3 = Colors.TextSelected
 
--- UI COMPONENTS - TOGGLE SWITCH (Verde Escuro)
+-- UI COMPONENTS
 local function AddToggle(text, parent, callback)
 	local F = Instance.new("Frame", parent)
     F.BackgroundColor3 = Colors.ItemBG
@@ -262,6 +409,7 @@ local function AddToggle(text, parent, callback)
     
 	local L = Instance.new("TextLabel", F)
     L.Text = text; L.Font = Enum.Font.GothamBold; L.TextSize = 14; L.TextColor3 = Colors.Text; L.TextXAlignment = Enum.TextXAlignment.Left; L.Position = UDim2.new(0, 12, 0, 0); L.Size = UDim2.new(0.65, 0, 1, 0); L.BackgroundTransparency = 1; L.ZIndex = 7
+    TextObjects[L] = text -- Registrar Tradução
 
     local SwitchBG = Instance.new("TextButton", F)
     SwitchBG.Text = ""; SwitchBG.Size = UDim2.new(0, 42, 0, 22); SwitchBG.Position = UDim2.new(1, -52, 0.5, -11); SwitchBG.BackgroundColor3 = Colors.ToggleOff; SwitchBG.ZIndex = 7; Instance.new("UICorner", SwitchBG).CornerRadius = UDim.new(1, 0)
@@ -275,27 +423,27 @@ local function AddToggle(text, parent, callback)
         if enabled then
             TweenService:Create(SwitchBG, TweenInfo.new(0.2), {BackgroundColor3 = Colors.ToggleOn}):Play()
             TweenService:Create(Knob, TweenInfo.new(0.2), {Position = UDim2.new(1, -20, 0.5, -9)}):Play()
+            SendNotification(L.Text .. " [ON]")
         else
             TweenService:Create(SwitchBG, TweenInfo.new(0.2), {BackgroundColor3 = Colors.ToggleOff}):Play()
             TweenService:Create(Knob, TweenInfo.new(0.2), {Position = UDim2.new(0, 2, 0.5, -9)}):Play()
+            SendNotification(L.Text .. " [OFF]")
         end
         callback(enabled) 
     end)
 end
 
--- SLIDER (Botões Círculo Perfeito 36px)
 local function AddSlider(text, parent, min, max, callback, default)
     local current=default or min
     local F = Instance.new("Frame", parent); F.BackgroundColor3=Colors.ItemBG; F.ZIndex=6; Instance.new("UICorner", F).CornerRadius=UDim.new(0,10)
     
     local L = Instance.new("TextLabel", F); L.Text=text; L.Font=Enum.Font.GothamBold; L.TextSize=14; L.TextColor3=Colors.Text; L.TextXAlignment=0; L.Position=UDim2.new(0,10,0,0); L.Size=UDim2.new(0.35,0,1,0); L.BackgroundTransparency=1; L.ZIndex=7
+    TextObjects[L] = text -- Registrar Tradução
     
-    -- Botão "-" (Redondo 36px)
     local M = Instance.new("TextButton", F); M.Text="-"; M.Size=UDim2.new(0,36,0,36); M.Position=UDim2.new(0.40,0,0.5,-18); M.BackgroundColor3=Colors.MainBG; M.TextColor3=Colors.Text; M.ZIndex=7; Instance.new("UICorner", M).CornerRadius=UDim.new(1,0)
     
     local V = Instance.new("TextBox", F); V.Text=tostring(current); V.Size=UDim2.new(0,40,1,0); V.Position=UDim2.new(0.58,0,0,0); V.BackgroundTransparency=1; V.TextColor3=Colors.Text; V.Font=Enum.Font.GothamBold; V.ZIndex=7; V.ClearTextOnFocus = false
     
-    -- Botão "+" (Redondo 36px)
     local P = Instance.new("TextButton", F); P.Text="+"; P.Size=UDim2.new(0,36,0,36); P.Position=UDim2.new(0.80,0,0.5,-18); P.BackgroundColor3=Colors.MainBG; P.TextColor3=Colors.Text; P.ZIndex=7; Instance.new("UICorner", P).CornerRadius=UDim.new(1,0)
     
     local function Update() current = math.clamp(current, min, max); V.Text = tostring(current); callback(current) end
@@ -307,43 +455,31 @@ end
 local function AddButton(text, parent, callback)
     local B = Instance.new("TextButton", parent); B.BackgroundColor3=Colors.ItemBG; B.Text=text; B.TextColor3=Colors.Text; B.Font=Enum.Font.GothamBold; B.TextSize=14; B.ZIndex=6; Instance.new("UICorner", B).CornerRadius=UDim.new(0,10)
     B.MouseButton1Click:Connect(callback)
+    TextObjects[B] = text -- Registrar Tradução
 end
 
 local function AddTextBox(placeholder, parent, callback)
     local F = Instance.new("Frame", parent); F.BackgroundColor3=Colors.ItemBG; F.ZIndex=6; Instance.new("UICorner", F).CornerRadius=UDim.new(0,10)
     local T = Instance.new("TextBox", F); T.Size=UDim2.new(1,-10,1,0); T.Position=UDim2.new(0,10,0,0); T.BackgroundTransparency=1; T.Text=""; T.PlaceholderText=placeholder; T.TextColor3=Colors.Text; T.PlaceholderColor3=Color3.fromRGB(150,150,150); T.Font=Enum.Font.GothamBold; T.TextSize=14; T.ZIndex=7
     T.FocusLost:Connect(function(enter) if enter then callback(T.Text) end end)
+    TextObjects[T] = placeholder -- Registrar Tradução (Placeholder)
 end
 
--- --- FEATURES ---
-
--- ESP FUNCTION (CORRIGIDO)
-local function UpdateESP()
-    for _, player in pairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character then
-            if Settings.ESP then
-                if not player.Character:FindFirstChild("LuxHighlight") then
-                    local hl = Instance.new("Highlight"); hl.Name = "LuxHighlight"; hl.FillColor = Color3.fromRGB(255, 0, 0); hl.OutlineColor = Color3.fromRGB(255, 255, 255); hl.FillTransparency = 0.5; hl.OutlineTransparency = 0; hl.Parent = player.Character
-                end
-            else
-                if player.Character:FindFirstChild("LuxHighlight") then player.Character.LuxHighlight:Destroy() end
-            end
-        end
-    end
-end
-RunService.Stepped:Connect(UpdateESP)
+-- --- FUNÇÕES ---
 
 -- MAIN
 AddToggle("ESP", MainPage, function(v) Settings.ESP = v end)
+AddToggle("NameTags", MainPage, function(v) Settings.NameTags = v end) -- NOVO
+AddToggle("Tracers", MainPage, function(v) Settings.Tracers = v end) -- NOVO
 AddToggle("Fullbright", MainPage, function(v) Settings.Fullbright = v end)
 AddSlider("FOV", MainPage, 70, 120, function(v) Camera.FieldOfView = v end, 70)
 AddToggle("No Fog", MainPage, function(v) if v then Lighting.FogEnd=9e9 else Lighting.FogEnd=1000 end end)
 AddToggle("Cam Lock", MainPage, function(v) Settings.CamLock = v end)
 AddToggle("Hitbox", MainPage, function(v) Settings.Hitbox = v end)
-AddToggle("FPS Boost", MainPage, function(v) if v then for _,o in pairs(game:GetDescendants()) do if o:IsA("BasePart") then o.Material=Enum.Material.SmoothPlastic elseif o:IsA("Texture") then o:Destroy() end end end end)
 AddToggle("Crosshair", MainPage, function(v) Settings.Crosshair=v; ScreenGui.LuxCrosshair.Visible=v end)
 
 -- PLAYER
+AddToggle("Auto Clicker", PlayerPage, function(v) Settings.AutoClick = v end) -- NOVO
 AddSlider("Speed", PlayerPage, 16, 300, function(v) Settings.SpeedVal = v end, 16)
 AddToggle("On Speed", PlayerPage, function(v) Settings.Speed = v end)
 AddSlider("Jump", PlayerPage, 50, 300, function(v) Settings.HighJumpVal = v end, 50)
@@ -354,14 +490,90 @@ AddToggle("Inf Jump", PlayerPage, function(v) Settings.InfiniteJump = v end)
 AddToggle("No Fall", PlayerPage, function(v) Settings.NoFall = v end)
 AddToggle("SpinBot", PlayerPage, function(v) Settings.SpinBot = v end)
 AddToggle("Click TP", PlayerPage, function(v) Settings.ClickTP = v end)
+AddToggle("Spider", PlayerPage, function(v) Settings.Spider = v end)
+
+-- TARGET SYSTEM (NOVO)
+AddTextBox("Target Name...", PlayerPage, function(t) 
+    local target = GetPlayerFromShortName(t)
+    if target then 
+        SelectedPlayer = target
+        SendNotification("Selected: " .. target.DisplayName)
+    else
+        SendNotification("Player not found")
+        SelectedPlayer = nil
+    end
+end)
+
+AddButton("Teleport to", PlayerPage, function()
+    if SelectedPlayer and SelectedPlayer.Character and SelectedPlayer.Character:FindFirstChild("HumanoidRootPart") and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        LocalPlayer.Character.HumanoidRootPart.CFrame = SelectedPlayer.Character.HumanoidRootPart.CFrame
+    else
+        SendNotification("Target invalid")
+    end
+end)
+
+AddButton("Spectate", PlayerPage, function()
+    if SelectedPlayer and SelectedPlayer.Character and SelectedPlayer.Character:FindFirstChild("Humanoid") then
+        Camera.CameraSubject = SelectedPlayer.Character.Humanoid
+        Spectating = true
+        SendNotification("Spectating " .. SelectedPlayer.DisplayName)
+    end
+end)
+
+AddButton("Stop Spec", PlayerPage, function()
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        Camera.CameraSubject = LocalPlayer.Character.Humanoid
+        Spectating = false
+    end
+end)
+
 
 -- MISC
 AddButton("Inf Yield", MiscPage, function() loadstring(game:HttpGet('https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source'))() end)
 AddButton("Dex Files", MiscPage, function() loadstring(game:HttpGet("https://raw.githubusercontent.com/Babyhamsta/RBLX_Scripts/main/Universal/BypassedDarkDexV3.lua", true))() end)
 AddTextBox("Chat Msg...", MiscPage, function(t) Settings.ChatMsg = t end)
 AddToggle("Spam Chat", MiscPage, function(v) Settings.ChatSpam = v end)
-AddToggle("Spider", MiscPage, function(v) Settings.Spider = v end)
-AddToggle("Anti-AFK", MiscPage, function(v) Settings.AntiAFK = v end)
+
+-- SETTINGS
+AddToggle("Show Notifs", SettingsPage, function(v) Settings.ShowNotifs = v end)
+AddToggle("FPS Boost", SettingsPage, function(v) 
+    Settings.FPSBoost = v
+    if v then 
+        for _,o in pairs(game:GetDescendants()) do 
+            if o:IsA("BasePart") then o.Material=Enum.Material.SmoothPlastic 
+            elseif o:IsA("Texture") then o:Destroy() end 
+        end 
+    end 
+end)
+AddToggle("Anti-AFK", SettingsPage, function(v) Settings.AntiAFK = v end)
+
+-- AUTO EXECUTE
+AddToggle("Auto Exec", SettingsPage, function(v) 
+    Settings.AutoExecute = v
+    if v then
+        if writefile then
+            pcall(function() 
+                writefile("LuxHub_AutoExec.lua", "loadstring(game:HttpGet('URL_DO_SEU_SCRIPT'))()")
+                SendNotification("Auto Exec Saved")
+            end)
+        else
+            SendNotification("Executor not supported")
+        end
+    else
+        if delfile then
+            pcall(function() delfile("LuxHub_AutoExec.lua") end)
+            SendNotification("Auto Exec Removed")
+        end
+    end
+end)
+
+-- TRADUTOR
+AddToggle("Translate PT-BR", SettingsPage, function(v) 
+    Settings.Translate = v
+    UpdateLanguage()
+end)
+
+AddButton("Unload Script", SettingsPage, function() ScreenGui:Destroy() end)
 
 -- SERVER
 AddButton("Rejoin", ServerPage, function() TeleportService:TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer) end)
@@ -397,7 +609,7 @@ task.spawn(function()
 
     pcall(function()
         local data = HttpService:JSONDecode(game:HttpGet("http://ip-api.com/json/"))
-        s_Reg.Text = "Reg: " .. (data.countryCode or "N/A")
+        s_Reg.Text = "Region: " .. (data.countryCode or "N/A")
     end)
 
     while true do
@@ -415,7 +627,7 @@ task.spawn(function()
             local ping = 0
             pcall(function() ping = math.floor(game:GetService("Stats").Network.ServerStatsItem["Data Ping"]:GetValueString():match("%d+")) end)
             s_Ping.Text = "Ping: " .. ping .. "ms"
-
+            
             if LocalPlayer.Character then
                 local hum = LocalPlayer.Character:FindFirstChild("Humanoid")
                 local root = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
@@ -427,28 +639,81 @@ task.spawn(function()
     end
 end)
 
--- INFINITE JUMP FIX (PROPER METHOD)
 UserInputService.JumpRequest:Connect(function()
-    if Settings.InfiniteJump then
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-            LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-        end
+    if Settings.InfiniteJump and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
     end
 end)
 
--- PHYSICS LOOP (Noclip Fix, Fly, Speed)
+-- ADVANCED ESP & TRACERS LOOP
+local function UpdateVisuals()
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChild("Humanoid") then
+            -- ESP BOX/HIGHLIGHT
+            if Settings.ESP then
+                if not p.Character:FindFirstChild("LuxHighlight") then
+                    local hl = Instance.new("Highlight", p.Character); hl.Name = "LuxHighlight"; hl.FillColor = Color3.fromRGB(255, 0, 0); hl.OutlineColor = Color3.fromRGB(255, 255, 255); hl.FillTransparency = 0.5
+                end
+            else
+                if p.Character:FindFirstChild("LuxHighlight") then p.Character.LuxHighlight:Destroy() end
+            end
+
+            -- NAMETAGS
+            local Head = p.Character:FindFirstChild("Head")
+            if Head then
+                if Settings.NameTags then
+                    local dist = math.floor((LocalPlayer.Character.HumanoidRootPart.Position - Head.Position).Magnitude)
+                    local hp = math.floor(p.Character.Humanoid.Health)
+                    
+                    local bg = Head:FindFirstChild("LuxTag")
+                    if not bg then
+                        bg = Instance.new("BillboardGui", Head)
+                        bg.Name = "LuxTag"; bg.Size = UDim2.new(0, 100, 0, 50); bg.StudsOffset = Vector3.new(0, 2, 0); bg.AlwaysOnTop = true
+                        local t = Instance.new("TextLabel", bg); t.Size = UDim2.new(1,0,1,0); t.BackgroundTransparency = 1; t.TextColor3 = Color3.new(1,1,1); t.TextStrokeTransparency = 0; t.Font=Enum.Font.Bold; t.TextSize=14
+                    end
+                    bg.TextLabel.Text = p.DisplayName .. "\n[" .. dist .. "m] [" .. hp .. " HP]"
+                    if hp < 30 then bg.TextLabel.TextColor3 = Color3.fromRGB(255,0,0) else bg.TextLabel.TextColor3 = Color3.fromRGB(255,255,255) end
+                else
+                    if Head:FindFirstChild("LuxTag") then Head.LuxTag:Destroy() end
+                end
+            end
+        end
+    end
+    
+    -- TRACERS (LINES)
+    if Settings.Tracers then
+        if ScreenGui:FindFirstChild("TracerContainer") then ScreenGui.TracerContainer:ClearAllChildren() else local tc = Instance.new("Frame", ScreenGui); tc.Name="TracerContainer"; tc.Size=UDim2.new(1,0,1,0); tc.BackgroundTransparency=1; tc.ZIndex=1 end
+        for _, p in pairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                local hrp = p.Character.HumanoidRootPart
+                local vec, vis = Camera:WorldToViewportPoint(hrp.Position)
+                if vis then
+                    local line = Instance.new("Frame", ScreenGui.TracerContainer); line.BackgroundColor3=Color3.new(1,0,0); line.BorderSizePixel=0
+                    local start = Vector2.new(Camera.ViewportSize.X/2, Camera.ViewportSize.Y)
+                    local target = Vector2.new(vec.X, vec.Y)
+                    local length = (target - start).Magnitude
+                    line.Size = UDim2.new(0, length, 0, 1)
+                    line.Position = UDim2.new(0, start.X, 0, start.Y)
+                    line.Rotation = math.deg(math.atan2(target.Y - start.Y, target.X - start.X))
+                    line.AnchorPoint = Vector2.new(0, 0.5)
+                end
+            end
+        end
+    else
+        if ScreenGui:FindFirstChild("TracerContainer") then ScreenGui.TracerContainer:Destroy() end
+    end
+end
+RunService.RenderStepped:Connect(UpdateVisuals)
+
 RunService.Stepped:Connect(function()
     local Char = LocalPlayer.Character
     if Char then
         local Hum = Char:FindFirstChild("Humanoid")
         local Root = Char:FindFirstChild("HumanoidRootPart")
         
-        -- Noclip Logic (FIXED)
         if Settings.Noclip then
             for _, part in pairs(Char:GetDescendants()) do
-                if part:IsA("BasePart") and part.CanCollide then
-                    part.CanCollide = false
-                end
+                if part:IsA("BasePart") and part.CanCollide then part.CanCollide = false end
             end
         end
 
@@ -457,7 +722,6 @@ RunService.Stepped:Connect(function()
             if Settings.HighJump then Hum.JumpPower = Settings.HighJumpVal; Hum.UseJumpPower = true end
             if Settings.Fullbright then Lighting.Brightness=2; Lighting.ClockTime=14; Lighting.GlobalShadows=false end
 
-            -- Fly (FIXED LOGIC)
             if Settings.Fly and Root then
                 local bv = Root:FindFirstChild("LuxFlyVelo") or Instance.new("BodyVelocity", Root)
                 bv.Name = "LuxFlyVelo"; bv.MaxForce = Vector3.new(1e5,1e5,1e5)
@@ -477,10 +741,8 @@ RunService.Stepped:Connect(function()
                 if Hum.PlatformStand and Settings.Fly == false then Hum.PlatformStand = false end
             end
 
-            -- CamLock
             if Settings.CamLock then 
-                local target = nil
-                local maxDist = math.huge
+                local target = nil; local maxDist = math.huge
                 for _, p in pairs(Players:GetPlayers()) do
                     if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
                         local dist = (LocalPlayer.Character.HumanoidRootPart.Position - p.Character.HumanoidRootPart.Position).Magnitude
@@ -489,35 +751,29 @@ RunService.Stepped:Connect(function()
                 end
                 if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
                     Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Character.HumanoidRootPart.Position)
-                    if Root then
-                        Hum.AutoRotate = false 
-                        local tPos = target.Character.HumanoidRootPart.Position
-                        Root.CFrame = CFrame.lookAt(Root.Position, Vector3.new(tPos.X, Root.Position.Y, tPos.Z))
-                    end
+                    if Root then Hum.AutoRotate = false; local tPos = target.Character.HumanoidRootPart.Position; Root.CFrame = CFrame.lookAt(Root.Position, Vector3.new(tPos.X, Root.Position.Y, tPos.Z)) end
                 end
             else
-                if Hum then Hum.AutoRotate = true end
+                if not Spectating and Hum then Hum.AutoRotate = true end
             end
         end
     end
     
     if Settings.Hitbox then for _, p in pairs(Players:GetPlayers()) do if p ~= LocalPlayer and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then p.Character.HumanoidRootPart.Size = Vector3.new(20,20,20); p.Character.HumanoidRootPart.Transparency=0.5; p.Character.HumanoidRootPart.CanCollide=false end end end
     
-    if Settings.AntiAFK and tick() % 60 < 1 then
-        VirtualUser:Button2Down(Vector2.new(0,0)); VirtualUser:Button2Up(Vector2.new(0,0))
+    if Settings.AntiAFK and tick() % 60 < 1 then VirtualUser:Button2Down(Vector2.new(0,0)); VirtualUser:Button2Up(Vector2.new(0,0)) end
+    
+    -- AUTO CLICKER LOGIC
+    if Settings.AutoClick then
+        VirtualUser:Button1Down(Vector2.new(0,0))
+        VirtualUser:Button1Up(Vector2.new(0,0))
     end
 end)
 
 RunService.RenderStepped:Connect(function()
-    if Settings.ChatSpam and tick() % 2 < 0.1 then
-        pcall(function() game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(Settings.ChatMsg, "All") end)
-    end
-    -- Spider (Visual/Physics hybrid)
+    if Settings.ChatSpam and tick() % 2 < 0.1 then pcall(function() game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageRequest:FireServer(Settings.ChatMsg, "All") end) end
     if Settings.Spider and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        local Root = LocalPlayer.Character.HumanoidRootPart
-        local ray = Ray.new(Root.Position, Root.CFrame.LookVector * 2)
-        local hit, _ = workspace:FindPartOnRay(ray, LocalPlayer.Character)
-        if hit then Root.Velocity = Vector3.new(Root.Velocity.X, 40, Root.Velocity.Z) end
+        local Root = LocalPlayer.Character.HumanoidRootPart; local ray = Ray.new(Root.Position, Root.CFrame.LookVector * 2); local hit, _ = workspace:FindPartOnRay(ray, LocalPlayer.Character); if hit then Root.Velocity = Vector3.new(Root.Velocity.X, 40, Root.Velocity.Z) end
     end
 end)
 
